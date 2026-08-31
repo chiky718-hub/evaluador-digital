@@ -28,15 +28,8 @@ def guardar_consulta(plataforma, consentimiento, nivel_riesgo):
 
 init_db()
 
-# 3. BARRA LATERAL (SIDEBAR) CLARA Y VISIBLE
+# 3. BARRA LATERAL (SIDEBAR) LIMPIA Y PROFESIONAL
 with st.sidebar:
-    st.title("⚙️ Motor de Inteligencia Legal")
-    st.markdown("Para procesar el análisis, ingresa tu clave de OpenAI:")
-    # Campo seguro para la API Key que se oculta al escribir
-    api_key = st.text_input("OpenAI API Key", type="password")
-    
-    st.divider()
-    
     st.title("🛡️ Información Importante")
     st.info("**Privacidad garantizada:** Este formulario es 100% anónimo. No guardamos tu IP, nombre ni datos de contacto.")
     st.divider()
@@ -60,14 +53,13 @@ if st.button("Evaluar mi situación legal", type="primary", use_container_width=
     
     if plataforma == "Selecciona una opción" or consentimiento == "Selecciona una opción":
         st.warning("⚠️ Por favor, completa todas las preguntas para obtener una evaluación.")
-    elif not api_key:
-        st.warning("⚠️ Falta la API Key. Por favor ingrésala en la barra lateral izquierda.")
     else:
         # Spinner visual mientras la IA procesa la consulta
         with st.spinner("Analizando jurisprudencia y encuadre penal..."):
             try:
-                # Conexión con OpenAI
-                client = openai.OpenAI(api_key=api_key)
+                # Conexión con OpenAI utilizando la clave interna y segura de Streamlit Secrets
+                api_key_secreta = st.secrets["OPENAI_API_KEY"]
+                client = openai.OpenAI(api_key=api_key_secreta)
                 
                 prompt_sistema = "Eres un abogado penalista argentino experto en cibercrimen y la Ley 26.485 (Protección Integral a las Mujeres). Tu tono es profesional, empático y urgente."
                 prompt_usuario = f"""
@@ -85,7 +77,7 @@ if st.button("Evaluar mi situación legal", type="primary", use_container_width=
                         {"role": "system", "content": prompt_sistema},
                         {"role": "user", "content": prompt_usuario}
                     ],
-                    temperature=0.3 # Temperatura baja para respuestas jurídicas precisas
+                    temperature=0.3
                 )
                 
                 analisis_ia = respuesta.choices[0].message.content
@@ -95,7 +87,7 @@ if st.button("Evaluar mi situación legal", type="primary", use_container_width=
                 
                 st.success("Evaluación completada con éxito.")
                 
-                # Mostrar el análisis redactado por la IA en una tarjeta de alto contraste
+                # Mostrar el análisis redactado por la IA
                 st.markdown("### 🚨 Análisis de Riesgo Legal Detallado")
                 st.info(analisis_ia)
                 
@@ -107,4 +99,4 @@ if st.button("Evaluar mi situación legal", type="primary", use_container_width=
                 st.link_button("📅 Agendar Consulta Profesional Urgente", enlace_reservas, type="primary", use_container_width=True)
                 
             except Exception as e:
-                st.error(f"Hubo un error de conexión con OpenAI. Revisa que tu API Key sea correcta. Detalle: {e}")
+                st.error(f"Hubo un error de configuración en el servidor. Por favor, intenta más tarde. Detalle: {e}")
