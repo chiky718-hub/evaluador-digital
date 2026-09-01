@@ -109,8 +109,22 @@ with st.sidebar:
     st.markdown("### ¿Emergencia inminente?")
     st.error("Ante violencia física o peligro de vida actual, comunícate de inmediato a la línea **144** o al **911**.")
 
-# 6. INTERFAZ PRINCIPAL
-st.title("Evaluación Jurídica Preliminar")
+# 6. INTERFAZ PRINCIPAL - TÍTULO CON TIPOGRAFÍA ELEGANTE
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap');
+    .titulo-estudio {
+        font-family: 'Playfair Display', serif;
+        font-size: 3.5rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 0.2em;
+        line-height: 1.1;
+    }
+    </style>
+    <div class="titulo-estudio">Leites & Asociados</div>
+""", unsafe_allow_html=True)
+
 st.markdown("Selecciona tu problemática para obtener un encuadre legal y conocer las medidas urgentes a tomar.")
 
 tema = st.selectbox("1. ¿Cuál es el motivo principal de tu consulta?", 
