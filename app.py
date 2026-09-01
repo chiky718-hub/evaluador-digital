@@ -6,9 +6,9 @@ import openai
 # 1. CONFIGURACIÓN DE PÁGINA Y BRANDING
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 2. BASE DE DATOS
+# 2. BASE DE DATOS (Actualizada a v2 para evitar errores de columnas)
 def init_db():
-    conn = sqlite3.connect('consultas_legales.db')
+    conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS triage 
@@ -18,7 +18,7 @@ def init_db():
     conn.close()
 
 def guardar_consulta(tema, plataforma, nivel_riesgo):
-    conn = sqlite3.connect('consultas_legales.db')
+    conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
     fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     c.execute("INSERT INTO triage (fecha, tema, plataforma, nivel_riesgo) VALUES (?, ?, ?, ?)", 
@@ -28,7 +28,7 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 3. BARRA LATERAL (SIDEBAR) - IDENTIDAD PROFESIONAL
+# 3. BARRA LATERAL (SIDEBAR) - CLARA Y VISIBLE
 with st.sidebar:
     st.title("⚖️ Estudio Jurídico Leites")
     st.markdown("**Dr. Cristian Dario Leites**")
@@ -61,7 +61,7 @@ plataforma = st.selectbox("2. ¿Dónde o cómo está ocurriendo el hecho?",
 
 st.divider()
 
-# Botón principal de acción
+# Botón principal de acción en alto contraste
 if st.button("Generar Evaluación Jurídica", type="primary", use_container_width=True):
     
     if tema == "Selecciona una opción" or plataforma == "Selecciona una opción":
@@ -73,6 +73,7 @@ if st.button("Generar Evaluación Jurídica", type="primary", use_container_widt
                 api_key_secreta = st.secrets["OPENAI_API_KEY"]
                 client = openai.OpenAI(api_key=api_key_secreta)
                 
+                # Instrucciones para la IA
                 prompt_sistema = "Eres el asistente legal de inteligencia artificial del Estudio Jurídico del Dr. Cristian Leites, abogado penalista. Eres experto en derecho penal argentino, cibercrimen y normativas de género. Tu tono es serio, protector, resolutivo y altamente profesional."
                 prompt_usuario = f"""
                 Redacta un dictamen preliminar breve (máximo 2 párrafos) y 3 pasos de acción legales inmediatos para un cliente con esta situación:
@@ -105,14 +106,12 @@ if st.button("Generar Evaluación Jurídica", type="primary", use_container_widt
                 st.markdown("### 📲 Asesoramiento Legal Urgente")
                 st.markdown("Para iniciar acciones legales, frenar el daño o coordinar una entrevista presencial, comunicate ahora mismo:")
                 
-                # --- CONFIGURACIÓN DE WHATSAPP ---
-                # Reemplazá los ceros por tu número real, incluyendo el 549376 de Posadas. 
-                # Ejemplo: "5493764123456"
+                # Número de WhatsApp integrado
                 numero_whatsapp = "5493764876017" 
-                
                 mensaje = "Hola Dr. Leites. Acabo de utilizar el Evaluador Legal en su sitio web y necesito coordinar una consulta profesional urgente."
                 enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                 
+                # Botón de WhatsApp
                 st.link_button("💬 Enviar WhatsApp al Estudio", enlace_wa, type="primary", use_container_width=True)
                 
             except Exception as e:
