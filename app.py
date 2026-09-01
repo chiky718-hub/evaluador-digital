@@ -16,7 +16,6 @@ st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", pa
 
 # 3. APLICAR FONDO CON FILTRO OSCURO (BÚSQUEDA INTELIGENTE)
 fondo_path = None
-# Ahora busca automáticamente cualquier extensión
 for ext in ['fondo.jpg', 'fondo.jpeg', 'fondo.png']:
     if os.path.exists(ext):
         fondo_path = ext
@@ -63,7 +62,7 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR)
+# 5. BARRA LATERAL (SIDEBAR) CON TEXTO CENTRADO Y REDES
 with st.sidebar:
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
@@ -80,8 +79,22 @@ with st.sidebar:
     else:
         st.title("⚖️ Estudio Jurídico Leites")
         
-    st.markdown("**Dr. Cristian Dario Leites**")
-    st.markdown("*Abogado Penalista | Posadas, Misiones*")
+    # Bloque HTML para centrar nombre, matrícula y redes sociales oficiales
+    st.markdown(
+        """
+        <div style="text-align: center;">
+            <b style="font-size: 1.1em;">Dr. Cristian Dario Leites</b><br>
+            <span style="font-size: 0.9em; color: #dddddd;">M.P. N° 4925</span><br>
+            <i style="font-size: 0.9em;">Abogado Penalista | Posadas, Misiones</i>
+        </div>
+        <div style="text-align: center; margin-top: 15px;">
+            <a href="https://www.instagram.com/cristianleites_ok?utm_source=qr" target="_blank" style="text-decoration: none; margin: 0 10px; font-size: 22px;" title="Instagram">📸</a>
+            <a href="https://www.facebook.com/cristian.leites.560443?mibextid=wwXIfr" target="_blank" style="text-decoration: none; margin: 0 10px; font-size: 22px;" title="Facebook">📘</a>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    
     st.divider()
     st.title("🛡️ Confidencialidad")
     st.info("Este portal está amparado por el **secreto profesional**. Los datos de tu consulta son 100% anónimos y encriptados.")
