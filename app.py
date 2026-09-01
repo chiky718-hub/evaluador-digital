@@ -75,7 +75,7 @@ init_db()
 if 'rol_seleccionado' not in st.session_state:
     st.session_state['rol_seleccionado'] = None
 
-# 5. BARRA LATERAL (SIDEBAR)
+# 5. BARRA LATERAL (SIDEBAR - LIMPIA Y SOBRIA)
 with st.sidebar:
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
@@ -123,17 +123,6 @@ with st.sidebar:
         """, 
         unsafe_allow_html=True
     )
-    
-    st.divider()
-    
-    # NUEVA SECCIÓN: QUIÉN SOY / SOBRE EL ESTUDIO EN LA BARRA LATERAL
-    st.markdown("### 🏛️ Trayectoria")
-    st.markdown("""
-        <div style="font-size: 0.88em; color: #cccccc; line-height: 1.4;">
-            Con ejercicio profesional en la ciudad de Posadas, Misiones. Especializado en <b>Derecho Penal</b>, litigios complejos y asesoramiento corporativo e integral. 
-            Compromiso absoluto con la defensa técnica rigurosa, la ética profesional y la protección de los derechos de nuestros representados.
-        </div>
-    """, unsafe_allow_html=True)
     
     st.divider()
     st.title("🛡️ Confidencialidad")
@@ -190,6 +179,13 @@ else:
         @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
         .titulo-estudio { font-family: 'Lora', serif; font-size: 3.3rem; font-weight: 500; color: #ffffff; margin-bottom: 0.2em; line-height: 1.2; }
         .subtitulo-rol { font-size: 1.1rem; color: #dddddd; margin-bottom: 1.5rem; }
+        .tarjeta-perfil {
+            background-color: rgba(20, 20, 20, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
         </style>
         <div class="titulo-estudio">Leites & Asociados</div>
         <div class="subtitulo-rol">Seleccione el área legal correspondiente a su consulta para recibir orientación profesional.</div>
@@ -208,6 +204,35 @@ else:
         if st.button("📂 Otras Ramas del Derecho\n\n(Familia, Sucesiones, Laboral, Accidentes, etc.)", use_container_width=True):
             st.session_state['rol_seleccionado'] = 'CIVIL_LABORAL'
             st.rerun()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # --- TARJETA INSTITUCIONAL CON FOTO EN LA PANTALLA PRINCIPAL ---
+        st.markdown("---")
+        
+        col_img, col_txt = st.columns([1, 2.5])
+        
+        with col_img:
+            perfil_path = None
+            for ext in ['perfil.jpg', 'perfil.png', 'perfil.jpeg']:
+                if os.path.exists(ext):
+                    perfil_path = ext
+                    break
+            
+            if perfil_path:
+                st.image(perfil_path, use_column_width=True)
+            else:
+                st.markdown("⚖️ **Dr. Cristian Leites**<br><span style='font-size:0.8em; color:#aaa;'>Subí tu foto como 'perfil.jpg' en GitHub</span>", unsafe_allow_html=True)
+                
+        with col_txt:
+            st.markdown("### Dr. Cristian Dario Leites")
+            st.markdown("<span style='color: #dddddd; font-size: 0.9em;'>Abogado Penalista (M.P. N° 4925)</span>", unsafe_allow_html=True)
+            st.markdown("""
+                <div style="font-size: 0.92em; color: #cccccc; line-height: 1.4; margin-top: 8px;">
+                    Especializado en litigios penales complejos, derecho penal y asesoramiento legal estratégico en la ciudad de Posadas, Misiones. 
+                    Compromiso absoluto con la defensa técnica rigurosa, la ética profesional y la protección de los derechos de nuestros representados.
+                </div>
+            """, unsafe_allow_html=True)
 
     else:
         # BOTÓN PARA VOLVER ATRÁS
@@ -581,7 +606,7 @@ else:
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
                                     mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
-                                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                                    enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
                                         <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
