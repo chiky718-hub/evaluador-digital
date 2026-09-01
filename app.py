@@ -41,7 +41,7 @@ if fondo_path:
     except Exception:
         pass
 
-# 4. BASE DE DATOS
+# 4. BASE DE DATOS (Con actualización automática de columnas)
 def init_db():
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
@@ -49,6 +49,15 @@ def init_db():
         CREATE TABLE IF NOT EXISTS triage 
         (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, rol TEXT, tema TEXT, detalle TEXT, nivel_riesgo TEXT)
     ''')
+    # Por si la tabla ya existía de versiones anteriores, nos aseguramos que tenga las columnas necesarias
+    try:
+        c.execute("ALTER TABLE triage ADD COLUMN rol TEXT")
+    except:
+        pass
+    try:
+        c.execute("ALTER TABLE triage ADD COLUMN detalle TEXT")
+    except:
+        pass
     conn.commit()
     conn.close()
 
@@ -282,7 +291,7 @@ else:
             tema = st.selectbox("2. Seleccione el delito que se le atribuye:", 
                                 ["Selecciona una opción", 
                                  "Robo, Hurto o delitos contra la propiedad", 
-                                 "Estafas o delitos económicos / informáticos", 
+                                 "Estafas virtuales o económicas", 
                                  "Lesiones, Amenazas o Coacción",
                                  "Delitos contra la integridad sexual",
                                  "Violencia de género (Ley 26.485)",
@@ -382,7 +391,6 @@ else:
                         if mejor_sueldo <= 0:
                             st.warning("⚠️ Por favor, ingrese un monto de sueldo válido.")
                         else:
-                            # Cálculo estimativo básico orientativo de indemnización por antigüedad + mes de integración + preaviso
                             try:
                                 d1 = datetime.combine(fecha_ingreso, datetime.min.time())
                                 d2 = datetime.combine(fecha_egreso, datetime.min.time())
@@ -485,7 +493,7 @@ else:
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
                                     mensaje = f"Hola Dr. Leites. Sufrí un accidente laboral ({tiene_art}) y necesito asesoramiento urgente."
-                                    enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
+                                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
                                         <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
@@ -503,7 +511,6 @@ else:
                         if not detalle_lab.strip():
                             st.warning("Por favor, ingrese un detalle de su consulta.")
                         else:
-                            # Flujo general para otros temas laborales
                             guardar_consulta("LABORAL", tipo_laboral, detalle_lab[:50], "EVALUADO_POR_IA")
                             st.success("Orientación registrada con éxito.")
                             st.info("SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES: Es fundamental conservar recibos de sueldo, registrar testigos y realizar las intimaciones por telegrama laboral respaldado por asesoramiento letrado. El Dr. Leites se encuentra a disposición para coordinar una entrevista y evaluar su caso.")
@@ -542,7 +549,7 @@ else:
                                     
                                     REGLAS ESTRICTAS:
                                     1. Inicia exactamente con: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
-                                    2. Redacta 3 oraciones indicando los primeros pasos legales o la documentación a reunir.
+                                    2. Redacta solo 3 oraciones indicando los primeros pasos legales o la documentación a reunir.
                                     3. Termina exactamente con: "El Dr. Leites se encuentra a disposición para coordinar una consulta y evaluar la viabilidad de su caso."
                                     """
                                     
@@ -560,8 +567,8 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
-                                    enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
+                                    mensaje = f"Hola Dr. Leites. Consulté por su web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
+                                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
                                         <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
