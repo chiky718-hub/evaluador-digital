@@ -5,7 +5,7 @@ import openai
 import base64
 import os
 
-# 1. FUNCIÓN PARA CARGAR IMÁGENES DE FONDO DE FORMA SEGURA
+# 1. FUNCIÓN PARA CARGAR IMÁGENES
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
@@ -14,14 +14,23 @@ def get_base64_of_bin_file(bin_file):
 # 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 3. APLICAR FONDO CON FILTRO OSCURO (ALTO CONTRASTE)
-if os.path.exists('fondo.jpeg'):
+# 3. APLICAR FONDO CON FILTRO OSCURO (BÚSQUEDA INTELIGENTE)
+fondo_path = None
+# Ahora busca automáticamente cualquier extensión
+for ext in ['fondo.jpg', 'fondo.jpeg', 'fondo.png']:
+    if os.path.exists(ext):
+        fondo_path = ext
+        break
+
+if fondo_path:
     try:
-        fondo_base64 = get_base64_of_bin_file('fondo.jpeg')
+        fondo_base64 = get_base64_of_bin_file(fondo_path)
+        tipo_img = "png" if "png" in fondo_path else "jpeg"
+        
         page_bg_img = f'''
         <style>
         .stApp {{
-            background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url("data:image/jpeg;base64,{fondo_base64}");
+            background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url("data:image/{tipo_img};base64,{fondo_base64}");
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -54,9 +63,8 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) CON LECTURA DE BYTES (MÁXIMA SEGURIDAD)
+# 5. BARRA LATERAL (SIDEBAR)
 with st.sidebar:
-    # Buscamos el logo sin importar si quedó guardado como png, jpg o jpeg
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
         if os.path.exists(ext):
@@ -65,7 +73,6 @@ with st.sidebar:
             
     if logo_path:
         try:
-            # Leemos la imagen como datos crudos para que no haya errores de formato
             with open(logo_path, 'rb') as f:
                 st.image(f.read(), use_container_width=True)
         except Exception:
