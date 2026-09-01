@@ -179,13 +179,6 @@ else:
         @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
         .titulo-estudio { font-family: 'Lora', serif; font-size: 3.3rem; font-weight: 500; color: #ffffff; margin-bottom: 0.2em; line-height: 1.2; }
         .subtitulo-rol { font-size: 1.1rem; color: #dddddd; margin-bottom: 1.5rem; }
-        .tarjeta-perfil {
-            background-color: rgba(20, 20, 20, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 30px;
-        }
         </style>
         <div class="titulo-estudio">Leites & Asociados</div>
         <div class="subtitulo-rol">Seleccione el área legal correspondiente a su consulta para recibir orientación profesional.</div>
@@ -220,7 +213,7 @@ else:
                     break
             
             if perfil_path:
-                st.image(perfil_path, use_column_width=True)
+                st.image(perfil_path, use_container_width=True)
             else:
                 st.markdown("⚖️ **Dr. Cristian Leites**<br><span style='font-size:0.8em; color:#aaa;'>Subí tu foto como 'perfil.jpg' en GitHub</span>", unsafe_allow_html=True)
                 
@@ -606,7 +599,7 @@ else:
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
                                     mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
-                                    enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
+                                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
                                         <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
