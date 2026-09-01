@@ -6,7 +6,7 @@ import openai
 # 1. CONFIGURACIÓN DE PÁGINA Y BRANDING
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 2. BASE DE DATOS (Actualizada a v2 para evitar errores de columnas)
+# 2. BASE DE DATOS
 def init_db():
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
@@ -28,22 +28,19 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 3. BARRA LATERAL (SIDEBAR) - CLARA Y VISIBLE
+# 3. BARRA LATERAL (SIDEBAR)
 with st.sidebar:
     st.title("⚖️ Estudio Jurídico Leites")
     st.markdown("**Dr. Cristian Dario Leites**")
     st.markdown("*Abogado Penalista | Posadas, Misiones*")
-    
     st.divider()
-    
     st.title("🛡️ Confidencialidad")
     st.info("Este portal está amparado por el **secreto profesional**. Los datos de tu consulta son 100% anónimos y encriptados.")
-    
     st.divider()
     st.markdown("### ¿Emergencia inminente?")
     st.error("Ante violencia física o peligro de vida actual, comunícate de inmediato a la línea **144** o al **911**.")
 
-# 4. INTERFAZ PRINCIPAL - CUESTIONARIO AMPLIADO
+# 4. INTERFAZ PRINCIPAL
 st.title("Evaluación Jurídica Preliminar")
 st.markdown("Selecciona tu problemática para obtener un encuadre legal y conocer las medidas urgentes a tomar.")
 
@@ -61,26 +58,26 @@ plataforma = st.selectbox("2. ¿Dónde o cómo está ocurriendo el hecho?",
 
 st.divider()
 
-# Botón principal de acción en alto contraste
 if st.button("Generar Evaluación Jurídica", type="primary", use_container_width=True):
-    
     if tema == "Selecciona una opción" or plataforma == "Selecciona una opción":
         st.warning("⚠️ Por favor, completa ambas preguntas para poder evaluar tu caso.")
     else:
-        with st.spinner("Analizando marco legal y doctrina aplicable..."):
+        with st.spinner("Analizando situación..."):
             try:
-                # Conexión con OpenAI
                 api_key_secreta = st.secrets["OPENAI_API_KEY"]
                 client = openai.OpenAI(api_key=api_key_secreta)
                 
-                # Instrucciones para la IA
-                prompt_sistema = "Eres el asistente legal de inteligencia artificial del Estudio Jurídico del Dr. Cristian Leites, abogado penalista. Eres experto en derecho penal argentino, cibercrimen y normativas de género. Tu tono es serio, protector, resolutivo y altamente profesional."
+                # Instrucciones estrictas para una respuesta corta y al pie
+                prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites. Habla de forma directa, sencilla y coloquial para que cualquier persona te entienda sin jerga legal. Tu respuesta debe ser extremadamente breve."
                 prompt_usuario = f"""
-                Redacta un dictamen preliminar breve (máximo 2 párrafos) y 3 pasos de acción legales inmediatos para un cliente con esta situación:
+                Analiza este caso:
                 - Conflicto: {tema}
                 - Medio: {plataforma}
                 
-                Termina indicando que el Dr. Leites está a disposición para asumir la querella, defensa o solicitar medidas cautelares urgentes según corresponda. Usa negritas para destacar términos jurídicos.
+                REGLAS ESTRICTAS PARA TU RESPUESTA:
+                1. Empieza el texto EXACTAMENTE con esta frase, en mayúsculas: "SEGUN EL DR. CRISTIAN LEITES,"
+                2. Luego, escribe solo 2 o 3 oraciones simples explicando qué hacer de inmediato (por ejemplo: no borrar evidencia, hacer capturas de pantalla, hacer la denuncia). 
+                3. Termina el texto EXACTAMENTE con esta frase: "el Dr. Cristian Leites se encuentra con disponibilidad para tomar el caso."
                 """
                 
                 respuesta = client.chat.completions.create(
@@ -89,30 +86,31 @@ if st.button("Generar Evaluación Jurídica", type="primary", use_container_widt
                         {"role": "system", "content": prompt_sistema},
                         {"role": "user", "content": prompt_usuario}
                     ],
-                    temperature=0.3 
+                    temperature=0.2 
                 )
                 
                 analisis_ia = respuesta.choices[0].message.content
                 
                 guardar_consulta(tema, plataforma, "EVALUADO_POR_IA")
-                
                 st.success("Evaluación generada correctamente.")
                 
-                st.markdown("### 🚨 Dictamen Preliminar")
+                st.markdown("### 🚨 Respuesta Rápida")
                 st.info(analisis_ia)
                 
                 st.divider()
+                st.markdown("### 📲 Contacto Directo")
                 
-                st.markdown("### 📲 Asesoramiento Legal Urgente")
-                st.markdown("Para iniciar acciones legales, frenar el daño o coordinar una entrevista presencial, comunicate ahora mismo:")
-                
-                # Número de WhatsApp integrado
                 numero_whatsapp = "5493764876017" 
                 mensaje = "Hola Dr. Leites. Acabo de utilizar el Evaluador Legal en su sitio web y necesito coordinar una consulta profesional urgente."
                 enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                 
-                # Botón de WhatsApp
-                st.link_button("💬 Enviar WhatsApp al Estudio", enlace_wa, type="primary", use_container_width=True)
+                # Botón de WhatsApp con diseño en HTML para incluir el logo
+                st.markdown(f'''
+                    <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
+                        Contactar al Estudio por WhatsApp
+                    </a>
+                ''', unsafe_allow_html=True)
                 
             except Exception as e:
                 st.error(f"Hubo un error de servidor. Por favor, intenta más tarde. Detalle: {e}")
