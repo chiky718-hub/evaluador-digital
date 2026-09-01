@@ -62,7 +62,7 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) - LOGO INVERTIDO A BLANCO Y MÁS GRANDE
+# 5. BARRA LATERAL (SIDEBAR) - LOGO AMPLIADO
 with st.sidebar:
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
@@ -73,11 +73,11 @@ with st.sidebar:
     if logo_path:
         try:
             logo_base64 = get_base64_of_bin_file(logo_path)
-            # El filtro 'invert(1) brightness(2)' transforma el logo oscuro a blanco puro. 'scale(1.15)' lo agranda.
+            # Cambiamos scale(1.15) a scale(1.6) y width a 100% para que el logo se vea mucho más grande
             st.markdown(
                 f'''
-                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 10px;">
-                    <img src="data:image/png;base64,{logo_base64}" style="width: 90%; transform: scale(1.15); filter: invert(1) brightness(2);">
+                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 30px; margin-top: 15px;">
+                    <img src="data:image/png;base64,{logo_base64}" style="width: 100%; transform: scale(1.6); filter: invert(1) brightness(2);">
                 </div>
                 ''', 
                 unsafe_allow_html=True
