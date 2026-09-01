@@ -14,7 +14,7 @@ def get_base64_of_bin_file(bin_file):
 # 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 3. APLICAR FONDO CON FILTRO OSCURO (BÚSQUEDA INTELIGENTE)
+# 3. APLICAR FONDO CON FILTRO OSCURO
 fondo_path = None
 for ext in ['fondo.jpg', 'fondo.jpeg', 'fondo.png']:
     if os.path.exists(ext):
@@ -62,7 +62,7 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) CON TEXTO CENTRADO Y REDES (ÍCONOS OFICIALES)
+# 5. BARRA LATERAL (SIDEBAR) - LOGO INVERTIDO A BLANCO Y MÁS GRANDE
 with st.sidebar:
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
@@ -72,14 +72,22 @@ with st.sidebar:
             
     if logo_path:
         try:
-            with open(logo_path, 'rb') as f:
-                st.image(f.read(), use_container_width=True)
+            logo_base64 = get_base64_of_bin_file(logo_path)
+            # El filtro 'invert(1) brightness(2)' transforma el logo oscuro a blanco puro. 'scale(1.15)' lo agranda.
+            st.markdown(
+                f'''
+                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 10px;">
+                    <img src="data:image/png;base64,{logo_base64}" style="width: 90%; transform: scale(1.15); filter: invert(1) brightness(2);">
+                </div>
+                ''', 
+                unsafe_allow_html=True
+            )
         except Exception:
             st.title("⚖️ Estudio Jurídico Leites")
     else:
         st.title("⚖️ Estudio Jurídico Leites")
         
-    # Bloque HTML para centrar nombre, matrícula y redes sociales con logotipos vectoriales
+    # Datos centrados y redes
     st.markdown(
         """
         <div style="text-align: center;">
@@ -109,17 +117,17 @@ with st.sidebar:
     st.markdown("### ¿Emergencia inminente?")
     st.error("Ante violencia física o peligro de vida actual, comunícate de inmediato a la línea **144** o al **911**.")
 
-# 6. INTERFAZ PRINCIPAL - TÍTULO CON TIPOGRAFÍA ELEGANTE
+# 6. INTERFAZ PRINCIPAL - TÍTULO CON TIPOGRAFÍA SOBRIA (LORA)
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
     .titulo-estudio {
-        font-family: 'Playfair Display', serif;
-        font-size: 3.5rem;
-        font-weight: 600;
+        font-family: 'Lora', serif;
+        font-size: 3.3rem;
+        font-weight: 500;
         color: #ffffff;
         margin-bottom: 0.2em;
-        line-height: 1.1;
+        line-height: 1.2;
     }
     </style>
     <div class="titulo-estudio">Leites & Asociados</div>
