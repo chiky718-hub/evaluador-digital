@@ -117,7 +117,6 @@ with st.sidebar:
     st.info("Este portal está amparado por el **secreto profesional**. Los datos de tu consulta son 100% anónimos y encriptados.")
     st.divider()
     
-    # NUEVO: PANEL DE ACCESO OCULTO PARA EL ADMINISTRADOR
     with st.expander("⚙️ Acceso Interno"):
         clave_ingresada = st.text_input("Contraseña de seguridad:", type="password")
         if clave_ingresada == "Leites2026":
@@ -127,9 +126,9 @@ with st.sidebar:
             st.error("Contraseña incorrecta.")
             st.session_state['acceso_concedido'] = False
 
-# 6. LÓGICA DE PANTALLA DIVIDIDA (PANEL DE CONTROL vs EVALUADOR PÚBLICO)
+# 6. LÓGICA DE PANTALLA DIVIDIDA
 if st.session_state.get('acceso_concedido', False):
-    # --- PANTALLA PRIVADA (SOLO PARA VOS) ---
+    # --- PANTALLA PRIVADA ---
     st.markdown("""
         <style>
         .titulo-panel { font-family: 'Lora', serif; font-size: 2.8rem; color: #ffffff; }
@@ -162,7 +161,7 @@ if st.session_state.get('acceso_concedido', False):
         st.rerun()
 
 else:
-    # --- PANTALLA PÚBLICA (LO QUE VEN LOS CLIENTES) ---
+    # --- PANTALLA PÚBLICA ---
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
@@ -196,16 +195,21 @@ else:
                     api_key_secreta = st.secrets["OPENAI_API_KEY"]
                     client = openai.OpenAI(api_key=api_key_secreta)
                     
-                    prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites. Habla de forma directa, sencilla y coloquial para que cualquier persona te entienda sin jerga legal. Tu respuesta debe ser extremadamente breve."
+                    # CEREBRO DE LA IA ACTUALIZADO
+                    prompt_sistema = """Eres el asistente legal de triage del Dr. Cristian Leites, abogado penalista en Posadas, Misiones. 
+                    Tu objetivo es brindar directrices legales de urgencia de forma directa, empática y con total autoridad jurídica, sin usar jerga compleja. 
+                    Si el caso involucra Violencia de Género (Ley 26.485), debes priorizar la seguridad de la víctima. 
+                    Si es un ciberdelito, enfatiza la preservación inalterada de la evidencia digital."""
+                    
                     prompt_usuario = f"""
                     Analiza este caso:
                     - Conflicto: {tema}
                     - Medio: {plataforma}
                     
                     REGLAS ESTRICTAS PARA TU RESPUESTA:
-                    1. Empieza el texto EXACTAMENTE con esta frase, en mayúsculas: "SEGUN EL DR. CRISTIAN LEITES,"
-                    2. Luego, escribe solo 2 o 3 oraciones simples explicando qué hacer de inmediato (por ejemplo: no borrar evidencia, hacer capturas de pantalla, hacer la denuncia). 
-                    3. Termina el texto EXACTAMENTE con esta frase: "el Dr. Cristian Leites se encuentra con disponibilidad para tomar el caso."
+                    1. Inicia exactamente con esta frase, en mayúsculas: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
+                    2. Redacta solo 3 oraciones indicando las medidas cautelares o probatorias urgentes que la persona debe tomar HOY (ej. no borrar evidencia ni bloquear agresores sin documentar, resguardar la integridad física).
+                    3. Termina el texto EXACTAMENTE con esta frase: "El Dr. Leites se encuentra a disposición para asumir la representación técnica inmediata de este caso."
                     """
                     
                     respuesta = client.chat.completions.create(
