@@ -3,6 +3,7 @@ import sqlite3
 from datetime import datetime
 import openai
 import base64
+import os
 
 # 1. FUNCIÓN PARA CARGAR LA IMAGEN DE FONDO
 def get_base64_of_bin_file(bin_file):
@@ -13,30 +14,31 @@ def get_base64_of_bin_file(bin_file):
 # 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 3. APLICAR FONDO CON EFECTO MARCA DE AGUA
-try:
-    fondo_base64 = get_base64_of_bin_file('fondo.jpg')
-    page_bg_img = f'''
-    <style>
-    .stApp {{
-        background-image: url("data:image/jpeg;base64,{fondo_base64}");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-    }}
-    /* Capa oscura semitransparente para que el texto sea legible */
-    .stApp::before {{
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(14, 17, 23, 0.88);
-        z-index: -1;
-    }}
-    </style>
-    '''
-    st.markdown(page_bg_img, unsafe_allow_html=True)
-except FileNotFoundError:
-    pass # Si no encuentra la imagen, carga el fondo oscuro normal
+# 3. APLICAR FONDO CON EFECTO MARCA DE AGUA (A prueba de errores)
+if os.path.exists('fondo.jpg'):
+    try:
+        fondo_base64 = get_base64_of_bin_file('fondo.jpg')
+        page_bg_img = f'''
+        <style>
+        .stApp {{
+            background-image: url("data:image/jpeg;base64,{fondo_base64}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }}
+        /* Capa oscura semitransparente para que el texto sea legible */
+        .stApp::before {{
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(14, 17, 23, 0.88);
+            z-index: -1;
+        }}
+        </style>
+        '''
+        st.markdown(page_bg_img, unsafe_allow_html=True)
+    except Exception:
+        pass
 
 # 4. BASE DE DATOS
 def init_db():
@@ -60,12 +62,12 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) CON LOGO
+# 5. BARRA LATERAL (SIDEBAR) CON LOGO SEGURO
 with st.sidebar:
-    try:
-        # Carga el logo en la parte superior
+    # Verifica si el archivo del logo existe antes de intentar mostrarlo
+    if os.path.exists('logo.png'):
         st.image('logo.png', use_column_width=True)
-    except FileNotFoundError:
+    else:
         st.title("⚖️ Estudio Jurídico Leites")
         
     st.markdown("**Dr. Cristian Dario Leites**")
