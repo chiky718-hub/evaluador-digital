@@ -41,27 +41,31 @@ if fondo_path:
     except Exception:
         pass
 
-# 4. BASE DE DATOS
+# 4. BASE DE DATOS (Actualizada para registrar el rol y estado)
 def init_db():
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS triage 
-        (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, tema TEXT, plataforma TEXT, nivel_riesgo TEXT)
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, rol TEXT, tema TEXT, detalle TEXT, nivel_riesgo TEXT)
     ''')
     conn.commit()
     conn.close()
 
-def guardar_consulta(tema, plataforma, nivel_riesgo):
+def guardar_consulta(rol, tema, detalle, nivel_riesgo):
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
     fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    c.execute("INSERT INTO triage (fecha, tema, plataforma, nivel_riesgo) VALUES (?, ?, ?, ?)", 
-              (fecha_actual, tema, plataforma, nivel_riesgo))
+    c.execute("INSERT INTO triage (fecha, rol, tema, detalle, nivel_riesgo) VALUES (?, ?, ?, ?, ?)", 
+              (fecha_actual, rol, tema, detalle, nivel_riesgo))
     conn.commit()
     conn.close()
 
 init_db()
+
+# Inicializar estados de navegación si no existen
+if 'rol_seleccionado' not in st.session_state:
+    st.session_state['rol_seleccionado'] = None
 
 # 5. BARRA LATERAL (SIDEBAR)
 with st.sidebar:
@@ -126,9 +130,9 @@ with st.sidebar:
             st.error("Contraseña incorrecta.")
             st.session_state['acceso_concedido'] = False
 
-# 6. LÓGICA DE PANTALLA DIVIDIDA
+# 6. LÓGICA PRINCIPAL (PANEL DE CONTROL vs PANTALLA PÚBLICA)
 if st.session_state.get('acceso_concedido', False):
-    # --- PANTALLA PRIVADA ---
+    # --- PANTALLA PRIVADA (ADMIN) ---
     st.markdown("""
         <style>
         .titulo-panel { font-family: 'Lora', serif; font-size: 2.8rem; color: #ffffff; }
@@ -136,10 +140,10 @@ if st.session_state.get('acceso_concedido', False):
         <div class="titulo-panel">📊 Panel de Control del Estudio</div>
     """, unsafe_allow_html=True)
     
-    st.markdown("Bienvenido al registro interno. Aquí puedes visualizar y descargar las estadísticas de uso de tu Evaluador Legal.")
+    st.markdown("Registro interno de consultas y perfiles de ingresos.")
     
     conn = sqlite3.connect('consultas_legales_v2.db')
-    df = pd.read_sql_query("SELECT id as ID, fecha as Fecha, tema as Tema, plataforma as Plataforma, nivel_riesgo as IA_Status FROM triage ORDER BY id DESC", conn)
+    df = pd.read_sql_query("SELECT id as ID, fecha as Fecha, rol as Rol, tema as Delito, detalle as Detalle_Estado, nivel_riesgo as IA_Status FROM triage ORDER BY id DESC", conn)
     conn.close()
     
     st.dataframe(df, use_container_width=True)
@@ -154,7 +158,7 @@ if st.session_state.get('acceso_concedido', False):
             type="primary"
         )
     else:
-        st.info("Aún no hay consultas registradas en la base de datos.")
+        st.info("Aún no hay consultas registradas.")
     
     if st.button("Cerrar Sesión"):
         st.session_state['acceso_concedido'] = False
@@ -166,82 +170,173 @@ else:
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
         .titulo-estudio { font-family: 'Lora', serif; font-size: 3.3rem; font-weight: 500; color: #ffffff; margin-bottom: 0.2em; line-height: 1.2; }
+        .subtitulo-rol { font-size: 1.1rem; color: #dddddd; margin-bottom: 1.5rem; }
         </style>
         <div class="titulo-estudio">Leites & Asociados</div>
+        <div class="subtitulo-rol">Seleccione su situación procesal para recibir asistencia jurídica especializada.</div>
     """, unsafe_allow_html=True)
 
-    st.markdown("Selecciona tu problemática para obtener un encuadre legal y conocer las medidas urgentes a tomar.")
+    # PASO 1: SELECCIÓN DE ROL (DOS BOTONES GRANDES)
+    if st.session_state['rol_seleccionado'] is None:
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🛡️ Fui Víctima / Denunciante\n\n(Necesito accionar o protección)", use_container_width=True):
+                st.session_state['rol_seleccionado'] = 'VICTIMA'
+                st.rerun()
+        with col2:
+            if st.button("⚖️ Estoy Acusado / Imputado\n\n(Necesito defensa penal urgente)", use_container_width=True):
+                st.session_state['rol_seleccionado'] = 'ACUSADO'
+                st.rerun()
 
-    tema = st.selectbox("1. ¿Cuál es el motivo principal de tu consulta?", 
-                              ["Selecciona una opción", 
-                               "Difusión no consentida de imágenes / Violencia Digital", 
-                               "Sextorsión o Chantaje Online", 
-                               "Estafas virtuales o Robo de identidad",
-                               "Violencia de género (Ley 26.485)",
-                               "Hostigamiento o Acoso",
-                               "Otro delito penal"])
+    else:
+        # BOTÓN PARA VOLVER ATRÁS
+        if st.button("⬅️ Cambiar de opción"):
+            st.session_state['rol_seleccionado'] = None
+            st.rerun()
 
-    plataforma = st.selectbox("2. ¿Dónde o cómo está ocurriendo el hecho?", 
-                              ["Selecciona una opción", "Redes Sociales (Instagram, Facebook, etc.)", "Mensajería (WhatsApp, Telegram)", "Entorno físico / presencial", "Múltiples medios"])
+        st.divider()
 
-    st.divider()
+        # ROL 1: VÍCTIMA / DENUNCIANTE
+        if st.session_state['rol_seleccionado'] == 'VICTIMA':
+            st.subheader("🛡️ Asistencia a Víctimas y Querellantes")
+            
+            tema = st.selectbox("1. Seleccione el motivo principal de su consulta:", 
+                                ["Selecciona una opción", 
+                                 "Violencia de género / intrafamiliar (Ley 26.485)", 
+                                 "Estafas virtuales / Phishing / Fraude informático", 
+                                 "Extorsión, Sextorsión o Chantaje Online",
+                                 "Amenazas, Hostigamiento o Acoso digital",
+                                 "Lesiones, Robo o Hurto",
+                                 "Delitos contra la integridad sexual",
+                                 "Otro delito penal"])
 
-    if st.button("Generar Evaluación Jurídica", type="primary", use_container_width=True):
-        if tema == "Selecciona una opción" or plataforma == "Selecciona una opción":
-            st.warning("⚠️ Por favor, completa ambas preguntas para poder evaluar tu caso.")
-        else:
-            with st.spinner("Analizando situación..."):
-                try:
-                    api_key_secreta = st.secrets["OPENAI_API_KEY"]
-                    client = openai.OpenAI(api_key=api_key_secreta)
-                    
-                    # CEREBRO DE LA IA ACTUALIZADO
-                    prompt_sistema = """Eres el asistente legal de triage del Dr. Cristian Leites, abogado penalista en Posadas, Misiones. 
-                    Tu objetivo es brindar directrices legales de urgencia de forma directa, empática y con total autoridad jurídica, sin usar jerga compleja. 
-                    Si el caso involucra Violencia de Género (Ley 26.485), debes priorizar la seguridad de la víctima. 
-                    Si es un ciberdelito, enfatiza la preservación inalterada de la evidencia digital."""
-                    
-                    prompt_usuario = f"""
-                    Analiza este caso:
-                    - Conflicto: {tema}
-                    - Medio: {plataforma}
-                    
-                    REGLAS ESTRICTAS PARA TU RESPUESTA:
-                    1. Inicia exactamente con esta frase, en mayúsculas: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
-                    2. Redacta solo 3 oraciones indicando las medidas cautelares o probatorias urgentes que la persona debe tomar HOY (ej. no borrar evidencia ni bloquear agresores sin documentar, resguardar la integridad física).
-                    3. Termina el texto EXACTAMENTE con esta frase: "El Dr. Leites se encuentra a disposición para asumir la representación técnica inmediata de este caso."
-                    """
-                    
-                    respuesta = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[
-                            {"role": "system", "content": prompt_sistema},
-                            {"role": "user", "content": prompt_usuario}
-                        ],
-                        temperature=0.2 
-                    )
-                    
-                    analisis_ia = respuesta.choices[0].message.content
-                    
-                    guardar_consulta(tema, plataforma, "EVALUADO_POR_IA")
-                    st.success("Evaluación generada correctamente.")
-                    
-                    st.markdown("### 🚨 Respuesta Rápida")
-                    st.info(analisis_ia)
-                    
-                    st.divider()
-                    st.markdown("### 📲 Contacto Directo")
-                    
-                    numero_whatsapp = "5493764876017" 
-                    mensaje = "Hola Dr. Leites. Acabo de utilizar el Evaluador Legal en su sitio web y necesito coordinar una consulta profesional urgente."
-                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
-                    
-                    st.markdown(f'''
-                        <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
-                            Contactar al Estudio por WhatsApp
-                        </a>
-                    ''', unsafe_allow_html=True)
-                    
-                except Exception as e:
-                    st.error(f"Hubo un error de servidor. Por favor, intenta más tarde. Detalle: {e}")
+            plataforma = st.selectbox("2. ¿Dónde o a través de qué medio ocurrió el hecho?", 
+                                    ["Selecciona una opción", "Redes Sociales (Instagram, Facebook, etc.)", "Mensajería (WhatsApp, Telegram)", "Vía pública / Entorno físico", "Múltiples medios"])
+
+            st.divider()
+
+            if st.button("Generar Evaluación Jurídica (Víctima)", type="primary", use_container_width=True):
+                if tema == "Selecciona una opción" or plataforma == "Selecciona una opción":
+                    st.warning("⚠️ Por favor, completa ambas opciones para continuar.")
+                else:
+                    with st.spinner("Analizando situación procesal..."):
+                        try:
+                            api_key_secreta = st.secrets["OPENAI_API_KEY"]
+                            client = openai.OpenAI(api_key=api_key_secreta)
+                            
+                            prompt_sistema = """Eres el asistente legal de triage del Dr. Cristian Leites, abogado penalista en Posadas, Misiones. 
+                            Asesoras a víctimas y querellantes. Tu tono es firme, empático y protector. Da directrices claras priorizando la integridad física y la preservación inalterada de la evidencia digital."""
+                            
+                            prompt_usuario = f"""
+                            Analiza este caso como VÍCTIMA:
+                            - Delito: {tema}
+                            - Medio: {plataforma}
+                            
+                            REGLAS ESTRICTAS PARA TU RESPUESTA:
+                            1. Inicia exactamente con esta frase: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
+                            2. Redacta solo 3 oraciones indicando las medidas urgentes a tomar (ej. resguardo de pruebas, denuncias inmediatas, medidas cautelares).
+                            3. Termina el texto EXACTAMENTE con esta frase: "El Dr. Leites se encuentra a disposición para asumir la representación técnica inmediata como querellante."
+                            """
+                            
+                            respuesta = client.chat.completions.create(
+                                model="gpt-3.5-turbo",
+                                messages=[{"role": "system", "content": prompt_sistema}, {"role": "user", "content": prompt_usuario}],
+                                temperature=0.2 
+                            )
+                            
+                            analisis_ia = respuesta.choices[0].message.content
+                            guardar_consulta("VICTIMA", tema, plataforma, "EVALUADO_POR_IA")
+                            st.success("Evaluación generada correctamente.")
+                            
+                            st.markdown("### 🚨 Directivas Urgentes")
+                            st.info(analisis_ia)
+                            
+                            st.divider()
+                            st.markdown("### 📲 Contacto Directo con el Estudio")
+                            numero_whatsapp = "5493764876017" 
+                            mensaje = "Hola Dr. Leites. Soy víctima de un hecho delictivo, utilicé su sitio web y necesito coordinar una consulta profesional urgente."
+                            enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                            
+                            st.markdown(f'''
+                                <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
+                                    Contactar al Estudio por WhatsApp
+                                </a>
+                            ''', unsafe_allow_html=True)
+                            
+                        except Exception as e:
+                            st.error(f"Error de servidor: {e}")
+
+        # ROL 2: ACUSADO / IMPUTADO
+        elif st.session_state['rol_seleccionado'] == 'ACUSADO':
+            st.subheader("⚖️ Defensa Penal e Imputados")
+            
+            estado_libertad = st.selectbox("1. Indique su situación de libertad actual:",
+                                          ["Selecciona una opción",
+                                           "Estoy en libertad / Notificado de la causa",
+                                           "Tengo orden de detención / captura pendiente",
+                                           "Estoy detenido en comisaría o dependencia policial (¡URGENTE!)"])
+
+            tema = st.selectbox("2. Seleccione el delito que se le atribuye:", 
+                                ["Selecciona una opción", 
+                                 "Robo, Hurto o delitos contra la propiedad", 
+                                 "Estafas o delitos económicos / informáticos", 
+                                 "Lesiones, Amenazas o Coacción",
+                                 "Delitos contra la integridad sexual",
+                                 "Violencia de género (Ley 26.485)",
+                                 "Infracción a la Ley de Estupefacientes (Ley 23.737)",
+                                 "Otro delito penal"])
+
+            st.divider()
+
+            if st.button("Generar Evaluación de Defensa", type="primary", use_container_width=True):
+                if estado_libertad == "Selecciona una opción" or tema == "Selecciona una opción":
+                    st.warning("⚠️ Por favor, completa ambas opciones para continuar.")
+                else:
+                    with st.spinner("Analizando estrategia defensiva..."):
+                        try:
+                            api_key_secreta = st.secrets["OPENAI_API_KEY"]
+                            client = openai.OpenAI(api_key=api_key_secreta)
+                            
+                            prompt_sistema = """Eres el asistente legal de triage del Dr. Cristian Leites, abogado penalista en Posadas, Misiones. 
+                            Asesoras a personas acusadas o imputadas. Tu tono es técnico, estrictamente reservado, garantista y urgente. Si el cliente está detenido o tiene pedido de captura, prioriza la excarcelación y el resguardo de derechos constitucionales."""
+                            
+                            prompt_usuario = f"""
+                            Analiza este caso como DEFENSA PENAL:
+                            - Situación de libertad: {estado_libertad}
+                            - Delito imputado: {tema}
+                            
+                            REGLAS ESTRICTAS PARA TU RESPUESTA:
+                            1. Inicia exactamente con esta frase: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
+                            2. Redacta solo 3 oraciones indicando las medidas defensivas inmediatas (ej. no declarar sin asistencia letrada, presentación voluntaria, resguardo de garantías).
+                            3. Termina el texto EXACTAMENTE con esta frase: "El Dr. Leites se encuentra a disposición para asumir la defensa técnica y el control de la causa."
+                            """
+                            
+                            respuesta = client.chat.completions.create(
+                                model="gpt-3.5-turbo",
+                                messages=[{"role": "system", "content": prompt_sistema}, {"role": "user", "content": prompt_usuario}],
+                                temperature=0.2 
+                            )
+                            
+                            analisis_ia = respuesta.choices[0].message.content
+                            guardar_consulta("ACUSADO", tema, estado_libertad, "EVALUADO_POR_IA")
+                            st.success("Evaluación generada correctamente.")
+                            
+                            st.markdown("### 🚨 Pautas Defensivas Urgentes")
+                            st.info(analisis_ia)
+                            
+                            st.divider()
+                            st.markdown("### 📲 Contacto Directo con el Estudio")
+                            numero_whatsapp = "5493764876017" 
+                            mensaje = "Hola Dr. Leites. Necesito asistencia y defensa penal urgente, utilicé su sitio web."
+                            enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                            
+                            st.markdown(f'''
+                                <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
+                                    Contactar al Estudio por WhatsApp
+                                </a>
+                            ''', unsafe_allow_html=True)
+                            
+                        except Exception as e:
+                            st.error(f"Error de servidor: {e}")
