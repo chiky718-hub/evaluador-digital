@@ -49,7 +49,6 @@ def init_db():
         CREATE TABLE IF NOT EXISTS triage 
         (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, rol TEXT, tema TEXT, detalle TEXT, nivel_riesgo TEXT)
     ''')
-    # Por si la tabla ya existía de versiones anteriores, nos aseguramos que tenga las columnas necesarias
     try:
         c.execute("ALTER TABLE triage ADD COLUMN rol TEXT")
     except:
@@ -265,7 +264,8 @@ else:
                             st.divider()
                             st.markdown("### 📲 Contacto Directo con el Estudio")
                             numero_whatsapp = "5493764876017" 
-                            mensaje = "Hola Dr. Leites. Soy víctima de un hecho delictivo, utilicé su sitio web y necesito coordinar una consulta profesional urgente."
+                            # WHATSAPP PERSONALIZADO PARA VÍCTIMA
+                            mensaje = f"Hola Dr. Leites. Fui VÍCTIMA de '{tema}' ocurrido en '{plataforma}'. Utilicé su sitio web y necesito coordinar una consulta urgente."
                             enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                             
                             st.markdown(f'''
@@ -339,7 +339,8 @@ else:
                             st.divider()
                             st.markdown("### 📲 Contacto Directo con el Estudio")
                             numero_whatsapp = "5493764876017" 
-                            mensaje = "Hola Dr. Leites. Necesito asistencia y defensa penal urgente, utilicé su sitio web."
+                            # WHATSAPP PERSONALIZADO PARA ACUSADO
+                            mensaje = f"Hola Dr. Leites. Necesito DEFENSA PENAL urgente. Delito atribuido: '{tema}'. Mi situación actual es: '{estado_libertad}'."
                             enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                             
                             st.markdown(f'''
@@ -434,7 +435,10 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    mensaje = f"Hola Dr. Leites. Consulté por su web sobre un {tipo_laboral} con un sueldo de ${mejor_sueldo} y necesito coordinar una entrevista."
+                                    # WHATSAPP PERSONALIZADO PARA DESPIDOS (CON FECHAS Y MONTO)
+                                    f_ing_str = fecha_ingreso.strftime('%d/%m/%Y')
+                                    f_eg_str = fecha_egreso.strftime('%d/%m/%Y')
+                                    mensaje = f"Hola Dr. Leites. Consulté por su web por un '{tipo_laboral}'. Ingreso: {f_ing_str}, Egreso: {f_eg_str}. Sueldo: ${mejor_sueldo:,.2f}. Estimado calculado: ${estimacion_indemnizacion:,.2f}. Necesito coordinar entrevista."
                                     enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
@@ -492,7 +496,9 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    mensaje = f"Hola Dr. Leites. Sufrí un accidente laboral ({tiene_art}) y necesito asesoramiento urgente."
+                                    # WHATSAPP PERSONALIZADO PARA ART
+                                    numero_whatsapp = "5493764876017"
+                                    mensaje = f"Hola Dr. Leites. Sufrí un accidente laboral. Cobertura: '{tiene_art}'. Detalle: {detalle_accidente[:60]}... Necesito asesoramiento."
                                     enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
@@ -515,7 +521,7 @@ else:
                             st.success("Orientación registrada con éxito.")
                             st.info("SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES: Es fundamental conservar recibos de sueldo, registrar testigos y realizar las intimaciones por telegrama laboral respaldado por asesoramiento letrado. El Dr. Leites se encuentra a disposición para coordinar una entrevista y evaluar su caso.")
                             
-                            mensaje = "Hola Dr. Leites. Consulté por su web sobre un tema laboral y necesito coordinar una entrevista."
+                            mensaje = f"Hola Dr. Leites. Consulté por su web sobre un tema laboral ({tipo_laboral}) y necesito coordinar una entrevista."
                             enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                             st.markdown(f'''
                                 <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
@@ -567,8 +573,8 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    mensaje = f"Hola Dr. Leites. Consulté por su web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
-                                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                                    mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
+                                    enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
                                         <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
