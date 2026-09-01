@@ -5,7 +5,7 @@ import openai
 import base64
 import os
 
-# 1. FUNCIÓN PARA CARGAR IMÁGENES DE FORMA SEGURA
+# 1. FUNCIÓN PARA CARGAR IMÁGENES DE FONDO DE FORMA SEGURA
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
@@ -18,7 +18,6 @@ st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", pa
 if os.path.exists('fondo.jpeg'):
     try:
         fondo_base64 = get_base64_of_bin_file('fondo.jpeg')
-        # Usamos linear-gradient para oscurecer la foto directamente
         page_bg_img = f'''
         <style>
         .stApp {{
@@ -55,12 +54,20 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) CON LOGO EN HTML (A PRUEBA DE FALLOS)
+# 5. BARRA LATERAL (SIDEBAR) CON LECTURA DE BYTES (MÁXIMA SEGURIDAD)
 with st.sidebar:
-    if os.path.exists('logo.png'):
+    # Buscamos el logo sin importar si quedó guardado como png, jpg o jpeg
+    logo_path = None
+    for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
+        if os.path.exists(ext):
+            logo_path = ext
+            break
+            
+    if logo_path:
         try:
-            logo_base64 = get_base64_of_bin_file('logo.png')
-            st.markdown(f'<img src="data:image/png;base64,{logo_base64}" width="100%" style="border-radius: 5px; margin-bottom: 20px;">', unsafe_allow_html=True)
+            # Leemos la imagen como datos crudos para que no haya errores de formato
+            with open(logo_path, 'rb') as f:
+                st.image(f.read(), use_container_width=True)
         except Exception:
             st.title("⚖️ Estudio Jurídico Leites")
     else:
