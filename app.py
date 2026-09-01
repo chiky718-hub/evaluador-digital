@@ -2,11 +2,43 @@ import streamlit as st
 import sqlite3
 from datetime import datetime
 import openai
+import base64
 
-# 1. CONFIGURACIÓN DE PÁGINA Y BRANDING
+# 1. FUNCIÓN PARA CARGAR LA IMAGEN DE FONDO
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 2. BASE DE DATOS
+# 3. APLICAR FONDO CON EFECTO MARCA DE AGUA
+try:
+    fondo_base64 = get_base64_of_bin_file('fondo.jpg')
+    page_bg_img = f'''
+    <style>
+    .stApp {{
+        background-image: url("data:image/jpeg;base64,{fondo_base64}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }}
+    /* Capa oscura semitransparente para que el texto sea legible */
+    .stApp::before {{
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(14, 17, 23, 0.88);
+        z-index: -1;
+    }}
+    </style>
+    '''
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+except FileNotFoundError:
+    pass # Si no encuentra la imagen, carga el fondo oscuro normal
+
+# 4. BASE DE DATOS
 def init_db():
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
@@ -28,9 +60,14 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 3. BARRA LATERAL (SIDEBAR)
+# 5. BARRA LATERAL (SIDEBAR) CON LOGO
 with st.sidebar:
-    st.title("⚖️ Estudio Jurídico Leites")
+    try:
+        # Carga el logo en la parte superior
+        st.image('logo.png', use_column_width=True)
+    except FileNotFoundError:
+        st.title("⚖️ Estudio Jurídico Leites")
+        
     st.markdown("**Dr. Cristian Dario Leites**")
     st.markdown("*Abogado Penalista | Posadas, Misiones*")
     st.divider()
@@ -40,7 +77,7 @@ with st.sidebar:
     st.markdown("### ¿Emergencia inminente?")
     st.error("Ante violencia física o peligro de vida actual, comunícate de inmediato a la línea **144** o al **911**.")
 
-# 4. INTERFAZ PRINCIPAL
+# 6. INTERFAZ PRINCIPAL
 st.title("Evaluación Jurídica Preliminar")
 st.markdown("Selecciona tu problemática para obtener un encuadre legal y conocer las medidas urgentes a tomar.")
 
@@ -67,7 +104,6 @@ if st.button("Generar Evaluación Jurídica", type="primary", use_container_widt
                 api_key_secreta = st.secrets["OPENAI_API_KEY"]
                 client = openai.OpenAI(api_key=api_key_secreta)
                 
-                # Instrucciones estrictas para una respuesta corta y al pie
                 prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites. Habla de forma directa, sencilla y coloquial para que cualquier persona te entienda sin jerga legal. Tu respuesta debe ser extremadamente breve."
                 prompt_usuario = f"""
                 Analiza este caso:
@@ -104,7 +140,6 @@ if st.button("Generar Evaluación Jurídica", type="primary", use_container_widt
                 mensaje = "Hola Dr. Leites. Acabo de utilizar el Evaluador Legal en su sitio web y necesito coordinar una consulta profesional urgente."
                 enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                 
-                # Botón de WhatsApp con diseño en HTML para incluir el logo
                 st.markdown(f'''
                     <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
