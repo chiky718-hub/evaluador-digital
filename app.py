@@ -125,6 +125,17 @@ with st.sidebar:
     )
     
     st.divider()
+    
+    # NUEVA SECCIÓN: QUIÉN SOY / SOBRE EL ESTUDIO EN LA BARRA LATERAL
+    st.markdown("### 🏛️ Trayectoria")
+    st.markdown("""
+        <div style="font-size: 0.88em; color: #cccccc; line-height: 1.4;">
+            Con ejercicio profesional en la ciudad de Posadas, Misiones. Especializado en <b>Derecho Penal</b>, litigios complejos y asesoramiento corporativo e integral. 
+            Compromiso absoluto con la defensa técnica rigurosa, la ética profesional y la protección de los derechos de nuestros representados.
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.divider()
     st.title("🛡️ Confidencialidad")
     st.info("Este portal está amparado por el **secreto profesional**. Los datos de tu consulta son 100% anónimos y encriptados.")
     st.divider()
@@ -264,7 +275,6 @@ else:
                             st.divider()
                             st.markdown("### 📲 Contacto Directo con el Estudio")
                             numero_whatsapp = "5493764876017" 
-                            # WHATSAPP PERSONALIZADO PARA VÍCTIMA
                             mensaje = f"Hola Dr. Leites. Fui VÍCTIMA de '{tema}' ocurrido en '{plataforma}'. Utilicé su sitio web y necesito coordinar una consulta urgente."
                             enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                             
@@ -339,7 +349,6 @@ else:
                             st.divider()
                             st.markdown("### 📲 Contacto Directo con el Estudio")
                             numero_whatsapp = "5493764876017" 
-                            # WHATSAPP PERSONALIZADO PARA ACUSADO
                             mensaje = f"Hola Dr. Leites. Necesito DEFENSA PENAL urgente. Delito atribuido: '{tema}'. Mi situación actual es: '{estado_libertad}'."
                             enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                             
@@ -435,7 +444,6 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    # WHATSAPP PERSONALIZADO PARA DESPIDOS (CON FECHAS Y MONTO)
                                     f_ing_str = fecha_ingreso.strftime('%d/%m/%Y')
                                     f_eg_str = fecha_egreso.strftime('%d/%m/%Y')
                                     mensaje = f"Hola Dr. Leites. Consulté por su web por un '{tipo_laboral}'. Ingreso: {f_ing_str}, Egreso: {f_eg_str}. Sueldo: ${mejor_sueldo:,.2f}. Estimado calculado: ${estimacion_indemnizacion:,.2f}. Necesito coordinar entrevista."
@@ -496,7 +504,6 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    # WHATSAPP PERSONALIZADO PARA ART
                                     numero_whatsapp = "5493764876017"
                                     mensaje = f"Hola Dr. Leites. Sufrí un accidente laboral. Cobertura: '{tiene_art}'. Detalle: {detalle_accidente[:60]}... Necesito asesoramiento."
                                     enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
@@ -574,7 +581,7 @@ else:
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
                                     mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
-                                    enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
+                                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
                                         <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
