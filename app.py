@@ -62,7 +62,7 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) CON TEXTO CENTRADO Y REDES
+# 5. BARRA LATERAL (SIDEBAR) CON TEXTO CENTRADO Y REDES (ÍCONOS OFICIALES)
 with st.sidebar:
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
@@ -79,7 +79,7 @@ with st.sidebar:
     else:
         st.title("⚖️ Estudio Jurídico Leites")
         
-    # Bloque HTML para centrar nombre, matrícula y redes sociales oficiales
+    # Bloque HTML para centrar nombre, matrícula y redes sociales con logotipos vectoriales
     st.markdown(
         """
         <div style="text-align: center;">
@@ -87,9 +87,16 @@ with st.sidebar:
             <span style="font-size: 0.9em; color: #dddddd;">M.P. N° 4925</span><br>
             <i style="font-size: 0.9em;">Abogado Penalista | Posadas, Misiones</i>
         </div>
-        <div style="text-align: center; margin-top: 15px;">
-            <a href="https://www.instagram.com/cristianleites_ok?utm_source=qr" target="_blank" style="text-decoration: none; margin: 0 10px; font-size: 22px;" title="Instagram">📸</a>
-            <a href="https://www.facebook.com/cristian.leites.560443?mibextid=wwXIfr" target="_blank" style="text-decoration: none; margin: 0 10px; font-size: 22px;" title="Facebook">📘</a>
+        <div style="text-align: center; margin-top: 15px; display: flex; justify-content: center; gap: 15px;">
+            <a href="https://www.instagram.com/cristianleites_ok?utm_source=qr" target="_blank" title="Instagram">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" width="30" height="30">
+            </a>
+            <a href="https://www.facebook.com/cristian.leites.560443?mibextid=wwXIfr" target="_blank" title="Facebook">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" width="30" height="30">
+            </a>
+            <a href="https://wa.me/5493764876017" target="_blank" title="WhatsApp">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="30" height="30">
+            </a>
         </div>
         """, 
         unsafe_allow_html=True
