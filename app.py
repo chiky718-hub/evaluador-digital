@@ -3,72 +3,83 @@ import sqlite3
 from datetime import datetime
 import openai
 
-# 1. CONFIGURACIÓN DE LA PÁGINA Y DISEÑO VISUAL
-st.set_page_config(page_title="Evaluador de Riesgo Digital", page_icon="⚖️", layout="centered")
+# 1. CONFIGURACIÓN DE PÁGINA Y BRANDING
+st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 2. CONEXIÓN A BASE DE DATOS SQLITE
+# 2. BASE DE DATOS
 def init_db():
     conn = sqlite3.connect('consultas_legales.db')
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS triage 
-        (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, plataforma TEXT, consentimiento TEXT, nivel_riesgo TEXT)
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, tema TEXT, plataforma TEXT, nivel_riesgo TEXT)
     ''')
     conn.commit()
     conn.close()
 
-def guardar_consulta(plataforma, consentimiento, nivel_riesgo):
+def guardar_consulta(tema, plataforma, nivel_riesgo):
     conn = sqlite3.connect('consultas_legales.db')
     c = conn.cursor()
     fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    c.execute("INSERT INTO triage (fecha, plataforma, consentimiento, nivel_riesgo) VALUES (?, ?, ?, ?)", 
-              (fecha_actual, plataforma, consentimiento, nivel_riesgo))
+    c.execute("INSERT INTO triage (fecha, tema, plataforma, nivel_riesgo) VALUES (?, ?, ?, ?)", 
+              (fecha_actual, tema, plataforma, nivel_riesgo))
     conn.commit()
     conn.close()
 
 init_db()
 
-# 3. BARRA LATERAL (SIDEBAR) LIMPIA Y PROFESIONAL
+# 3. BARRA LATERAL (SIDEBAR) - IDENTIDAD PROFESIONAL
 with st.sidebar:
-    st.title("🛡️ Información Importante")
-    st.info("**Privacidad garantizada:** Este formulario es 100% anónimo. No guardamos tu IP, nombre ni datos de contacto.")
+    st.title("⚖️ Estudio Jurídico Leites")
+    st.markdown("**Dr. Cristian Dario Leites**")
+    st.markdown("*Abogado Penalista | Posadas, Misiones*")
+    
     st.divider()
-    st.markdown("### ¿Estás en peligro inminente?")
-    st.error("Si sufres violencia física o amenazas de muerte, comunícate inmediatamente a la línea **144** o al **911**.")
+    
+    st.title("🛡️ Confidencialidad")
+    st.info("Este portal está amparado por el **secreto profesional**. Los datos de tu consulta son 100% anónimos y encriptados.")
+    
+    st.divider()
+    st.markdown("### ¿Emergencia inminente?")
+    st.error("Ante violencia física o peligro de vida actual, comunícate de inmediato a la línea **144** o al **911**.")
 
-# 4. INTERFAZ PRINCIPAL (CUESTIONARIO)
-st.title("Evaluador de Riesgo: Violencia Digital")
-st.markdown("Responde estas breves preguntas para conocer tu situación legal y los pasos a seguir ante la difusión no consentida de imágenes.")
+# 4. INTERFAZ PRINCIPAL - CUESTIONARIO AMPLIADO
+st.title("Evaluación Jurídica Preliminar")
+st.markdown("Selecciona tu problemática para obtener un encuadre legal y conocer las medidas urgentes a tomar.")
 
-plataforma = st.selectbox("1. ¿Dónde se está difundiendo el contenido?", 
-                          ["Selecciona una opción", "Instagram / Facebook", "WhatsApp / Telegram", "Páginas web / Foros", "Otro"])
+tema = st.selectbox("1. ¿Cuál es el motivo principal de tu consulta?", 
+                          ["Selecciona una opción", 
+                           "Difusión no consentida de imágenes / Violencia Digital", 
+                           "Sextorsión o Chantaje Online", 
+                           "Estafas virtuales o Robo de identidad",
+                           "Violencia de género (Ley 26.485)",
+                           "Hostigamiento o Acoso",
+                           "Otro delito penal"])
 
-consentimiento = st.radio("2. ¿Hubo consentimiento previo para la captura de esa imagen/video?", 
-                          ["Selecciona una opción", "Sí, pero NO para difundirlo", "No, fue grabado sin mi permiso", "Es material editado/falso (Deepfake)"])
+plataforma = st.selectbox("2. ¿Dónde o cómo está ocurriendo el hecho?", 
+                          ["Selecciona una opción", "Redes Sociales (Instagram, Facebook, etc.)", "Mensajería (WhatsApp, Telegram)", "Entorno físico / presencial", "Múltiples medios"])
 
 st.divider()
 
-# Botón principal de acción, amplio y destacado
-if st.button("Evaluar mi situación legal", type="primary", use_container_width=True):
+# Botón principal de acción
+if st.button("Generar Evaluación Jurídica", type="primary", use_container_width=True):
     
-    if plataforma == "Selecciona una opción" or consentimiento == "Selecciona una opción":
-        st.warning("⚠️ Por favor, completa todas las preguntas para obtener una evaluación.")
+    if tema == "Selecciona una opción" or plataforma == "Selecciona una opción":
+        st.warning("⚠️ Por favor, completa ambas preguntas para poder evaluar tu caso.")
     else:
-        # Spinner visual mientras la IA procesa la consulta
-        with st.spinner("Analizando jurisprudencia y encuadre penal..."):
+        with st.spinner("Analizando marco legal y doctrina aplicable..."):
             try:
-                # Conexión con OpenAI utilizando la clave interna y segura de Streamlit Secrets
+                # Conexión con OpenAI
                 api_key_secreta = st.secrets["OPENAI_API_KEY"]
                 client = openai.OpenAI(api_key=api_key_secreta)
                 
-                prompt_sistema = "Eres un abogado penalista argentino experto en cibercrimen y la Ley 26.485 (Protección Integral a las Mujeres). Tu tono es profesional, empático y urgente."
+                prompt_sistema = "Eres el asistente legal de inteligencia artificial del Estudio Jurídico del Dr. Cristian Leites, abogado penalista. Eres experto en derecho penal argentino, cibercrimen y normativas de género. Tu tono es serio, protector, resolutivo y altamente profesional."
                 prompt_usuario = f"""
-                Analiza el siguiente caso de vulneración de privacidad digital:
-                - Plataforma de difusión: {plataforma}
-                - Contexto de la obtención del material: {consentimiento}
+                Redacta un dictamen preliminar breve (máximo 2 párrafos) y 3 pasos de acción legales inmediatos para un cliente con esta situación:
+                - Conflicto: {tema}
+                - Medio: {plataforma}
                 
-                Redacta un breve análisis de riesgo legal (máximo 2 párrafos) y 3 pasos de acción inmediatos para la víctima.
-                Utiliza negritas para resaltar conceptos clave. No uses formatos de código ni introducciones genéricas.
+                Termina indicando que el Dr. Leites está a disposición para asumir la querella, defensa o solicitar medidas cautelares urgentes según corresponda. Usa negritas para destacar términos jurídicos.
                 """
                 
                 respuesta = client.chat.completions.create(
@@ -77,26 +88,32 @@ if st.button("Evaluar mi situación legal", type="primary", use_container_width=
                         {"role": "system", "content": prompt_sistema},
                         {"role": "user", "content": prompt_usuario}
                     ],
-                    temperature=0.3
+                    temperature=0.3 
                 )
                 
                 analisis_ia = respuesta.choices[0].message.content
                 
-                # Registrar en la base de datos local
-                guardar_consulta(plataforma, consentimiento, "EVALUADO_POR_IA")
+                guardar_consulta(tema, plataforma, "EVALUADO_POR_IA")
                 
-                st.success("Evaluación completada con éxito.")
+                st.success("Evaluación generada correctamente.")
                 
-                # Mostrar el análisis redactado por la IA
-                st.markdown("### 🚨 Análisis de Riesgo Legal Detallado")
+                st.markdown("### 🚨 Dictamen Preliminar")
                 st.info(analisis_ia)
                 
                 st.divider()
-                st.markdown("### ¿Necesitas frenar esto ahora?")
                 
-                # Link a tu Google Calendar
-                enlace_reservas = "https://calendar.google.com/" 
-                st.link_button("📅 Agendar Consulta Profesional Urgente", enlace_reservas, type="primary", use_container_width=True)
+                st.markdown("### 📲 Asesoramiento Legal Urgente")
+                st.markdown("Para iniciar acciones legales, frenar el daño o coordinar una entrevista presencial, comunicate ahora mismo:")
+                
+                # --- CONFIGURACIÓN DE WHATSAPP ---
+                # Reemplazá los ceros por tu número real, incluyendo el 549376 de Posadas. 
+                # Ejemplo: "5493764123456"
+                numero_whatsapp = "5493764876017" 
+                
+                mensaje = "Hola Dr. Leites. Acabo de utilizar el Evaluador Legal en su sitio web y necesito coordinar una consulta profesional urgente."
+                enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                
+                st.link_button("💬 Enviar WhatsApp al Estudio", enlace_wa, type="primary", use_container_width=True)
                 
             except Exception as e:
-                st.error(f"Hubo un error de configuración en el servidor. Por favor, intenta más tarde. Detalle: {e}")
+                st.error(f"Hubo un error de servidor. Por favor, intenta más tarde. Detalle: {e}")
