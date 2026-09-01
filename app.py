@@ -4,6 +4,7 @@ from datetime import datetime
 import openai
 import base64
 import os
+from PIL import Image # Agregamos PIL para abrir el logo de forma segura
 
 # 1. FUNCIÓN PARA CARGAR LA IMAGEN DE FONDO
 def get_base64_of_bin_file(bin_file):
@@ -14,7 +15,7 @@ def get_base64_of_bin_file(bin_file):
 # 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 3. APLICAR FONDO CON EFECTO MARCA DE AGUA (Corregido a .jpeg)
+# 3. APLICAR FONDO CON ALTO CONTRASTE PARA LA INTERFAZ
 if os.path.exists('fondo.jpeg'):
     try:
         fondo_base64 = get_base64_of_bin_file('fondo.jpeg')
@@ -26,13 +27,15 @@ if os.path.exists('fondo.jpeg'):
             background-position: center;
             background-attachment: fixed;
         }}
-        /* Capa oscura semitransparente para garantizar la legibilidad de textos y botones */
-        .stApp::before {{
-            content: "";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(14, 17, 23, 0.88);
-            z-index: -1;
+        /* Diseño para garantizar que la barra lateral y los botones tengan visibilidad clara */
+        [data-testid="stAppViewContainer"] .main .block-container {{
+            background-color: rgba(14, 17, 23, 0.92);
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }}
+        [data-testid="stSidebar"] > div:first-child {{
+            background-color: rgba(14, 17, 23, 0.95);
         }}
         </style>
         '''
@@ -62,10 +65,14 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) CON LOGO (Corregido a .jpg)
+# 5. BARRA LATERAL (SIDEBAR) CON APERTURA SEGURA DE LOGO
 with st.sidebar:
     if os.path.exists('logo.jpg'):
-        st.image('logo.jpg', use_column_width=True)
+        try:
+            img = Image.open('logo.jpg')
+            st.image(img, use_container_width=True)
+        except Exception as e:
+            st.error(f"Error cargando logo: {e}")
     else:
         st.title("⚖️ Estudio Jurídico Leites")
         
