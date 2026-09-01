@@ -41,7 +41,7 @@ if fondo_path:
     except Exception:
         pass
 
-# 4. BASE DE DATOS (Actualizada para registrar el rol y estado)
+# 4. BASE DE DATOS
 def init_db():
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
@@ -143,7 +143,7 @@ if st.session_state.get('acceso_concedido', False):
     st.markdown("Registro interno de consultas y perfiles de ingresos.")
     
     conn = sqlite3.connect('consultas_legales_v2.db')
-    df = pd.read_sql_query("SELECT id as ID, fecha as Fecha, rol as Rol, tema as Delito, detalle as Detalle_Estado, nivel_riesgo as IA_Status FROM triage ORDER BY id DESC", conn)
+    df = pd.read_sql_query("SELECT id as ID, fecha as Fecha, rol as Categoria_Area, tema as Asunto, detalle as Detalle_Estado, nivel_riesgo as IA_Status FROM triage ORDER BY id DESC", conn)
     conn.close()
     
     st.dataframe(df, use_container_width=True)
@@ -173,30 +173,32 @@ else:
         .subtitulo-rol { font-size: 1.1rem; color: #dddddd; margin-bottom: 1.5rem; }
         </style>
         <div class="titulo-estudio">Leites & Asociados</div>
-        <div class="subtitulo-rol">Seleccione su situación procesal para recibir asistencia jurídica especializada.</div>
+        <div class="subtitulo-rol">Seleccione el área legal correspondiente a su consulta para recibir orientación profesional.</div>
     """, unsafe_allow_html=True)
 
-    # PASO 1: SELECCIÓN DE ROL (DOS BOTONES GRANDES)
+    # PASO 1: SELECCIÓN DE ÁREA / ROL (TRES BOTONES)
     if st.session_state['rol_seleccionado'] is None:
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🛡️ Fui Víctima / Denunciante\n\n(Necesito accionar o protección)", use_container_width=True):
-                st.session_state['rol_seleccionado'] = 'VICTIMA'
-                st.rerun()
-        with col2:
-            if st.button("⚖️ Estoy Acusado / Imputado\n\n(Necesito defensa penal urgente)", use_container_width=True):
-                st.session_state['rol_seleccionado'] = 'ACUSADO'
-                st.rerun()
+        if st.button("🛡️ Fui Víctima / Denunciante\n\n(Derecho Penal - Necesito accionar o protección)", use_container_width=True):
+            st.session_state['rol_seleccionado'] = 'VICTIMA'
+            st.rerun()
+            
+        if st.button("⚖️ Estoy Acusado / Imputado\n\n(Derecho Penal - Defensa penal urgente)", use_container_width=True):
+            st.session_state['rol_seleccionado'] = 'ACUSADO'
+            st.rerun()
+            
+        if st.button("📂 Otras Ramas del Derecho\n\n(Familia, Sucesiones, Laboral, Accidentes, etc.)", use_container_width=True):
+            st.session_state['rol_seleccionado'] = 'CIVIL_LABORAL'
+            st.rerun()
 
     else:
         # BOTÓN PARA VOLVER ATRÁS
-        if st.button("⬅️ Cambiar de opción"):
+        if st.button("⬅️ Volver al menú principal"):
             st.session_state['rol_seleccionado'] = None
             st.rerun()
 
         st.divider()
 
-        # ROL 1: VÍCTIMA / DENUNCIANTE
+        # ROL 1: VÍCTIMA / DENUNCIANTE (PENAL)
         if st.session_state['rol_seleccionado'] == 'VICTIMA':
             st.subheader("🛡️ Asistencia a Víctimas y Querellantes")
             
@@ -215,7 +217,7 @@ else:
 
             st.divider()
 
-            if st.button("Generar Evaluación Jurídica (Víctima)", type="primary", use_container_width=True):
+            if st.button("Generar Evaluación Jurídica", type="primary", use_container_width=True):
                 if tema == "Selecciona una opción" or plataforma == "Selecciona una opción":
                     st.warning("⚠️ Por favor, completa ambas opciones para continuar.")
                 else:
@@ -267,7 +269,7 @@ else:
                         except Exception as e:
                             st.error(f"Error de servidor: {e}")
 
-        # ROL 2: ACUSADO / IMPUTADO
+        # ROL 2: ACUSADO / IMPUTADO (PENAL)
         elif st.session_state['rol_seleccionado'] == 'ACUSADO':
             st.subheader("⚖️ Defensa Penal e Imputados")
             
@@ -329,6 +331,76 @@ else:
                             st.markdown("### 📲 Contacto Directo con el Estudio")
                             numero_whatsapp = "5493764876017" 
                             mensaje = "Hola Dr. Leites. Necesito asistencia y defensa penal urgente, utilicé su sitio web."
+                            enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                            
+                            st.markdown(f'''
+                                <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
+                                    Contactar al Estudio por WhatsApp
+                                </a>
+                            ''', unsafe_allow_html=True)
+                            
+                        except Exception as e:
+                            st.error(f"Error de servidor: {e}")
+
+        # ROL 3: OTRAS RAMAS DEL DERECHO (FAMILIA, SUCESIONES, LABORAL, ACCIDENTES)
+        elif st.session_state['rol_seleccionado'] == 'CIVIL_LABORAL':
+            st.subheader("📂 Otras Ramas del Derecho")
+            
+            rama_derecho = st.selectbox("1. Seleccione el área legal de su consulta:",
+                                        ["Selecciona una opción",
+                                         "Derecho de Familia (Alimentos, Cuidado Personal, Régimen de Comunicación)",
+                                         "Divorcio y Separación de Bienes",
+                                         "Sucesiones / Herencias",
+                                         "Accidentes de Tránsito / Daños y Perjuicios",
+                                         "Derecho Laboral (Despido, Accidente de trabajo, Diferencias salariales)",
+                                         "Otro asesoramiento civil / comercial"])
+
+            detalle_consulta = st.text_area("2. Describa brevemente su situación o duda principal:", 
+                                              placeholder="Ej: Necesito iniciar una demanda por alimentos o fui despedido sin causa...")
+
+            st.divider()
+
+            if st.button("Generar Orientación Legal", type="primary", use_container_width=True):
+                if rama_derecho == "Selecciona una opción" or not detalle_consulta.strip():
+                    st.warning("⚠️ Por favor, seleccione el área y complete la descripción de su consulta.")
+                else:
+                    with st.spinner("Analizando su caso..."):
+                        try:
+                            api_key_secreta = st.secrets["OPENAI_API_KEY"]
+                            client = openai.OpenAI(api_key=api_key_secreta)
+                            
+                            prompt_sistema = """Eres el asistente legal del Dr. Cristian Leites, abogado en Posadas, Misiones. 
+                            Asesoras en ramas extrapenales (Familia, Laboral, Civil, Sucesiones). Tu tono es profesional, claro, ordenado y prudente, brindando una orientación inicial general."""
+                            
+                            prompt_usuario = f"""
+                            Analiza este caso extrapenal:
+                            - Área: {rama_derecho}
+                            - Descripción: {detalle_consulta}
+                            
+                            REGLAS ESTRICTAS PARA TU RESPUESTA:
+                            1. Inicia exactamente con esta frase: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
+                            2. Redacta solo 3 oraciones indicando los primeros pasos legales o la documentación a reunir.
+                            3. Termina el texto EXACTAMENTE con esta frase: "El Dr. Leites se encuentra a disposición para coordinar una consulta y evaluar la viabilidad de su caso."
+                            """
+                            
+                            respuesta = client.chat.completions.create(
+                                model="gpt-3.5-turbo",
+                                messages=[{"role": "system", "content": prompt_sistema}, {"role": "user", "content": prompt_usuario}],
+                                temperature=0.2 
+                            )
+                            
+                            analisis_ia = respuesta.choices[0].message.content
+                            guardar_consulta("OTRAS_RAMAS", rama_derecho, detalle_consulta[:50], "EVALUADO_POR_IA")
+                            st.success("Orientación generada correctamente.")
+                            
+                            st.markdown("### 📋 Orientación Profesional")
+                            st.info(analisis_ia)
+                            
+                            st.divider()
+                            st.markdown("### 📲 Contacto Directo con el Estudio")
+                            numero_whatsapp = "5493764876017" 
+                            mensaje = "Hola Dr. Leites. Consulté por su sitio web sobre un tema de " + rama_derecho + " y necesito coordinar una entrevista."
                             enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                             
                             st.markdown(f'''
