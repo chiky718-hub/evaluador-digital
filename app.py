@@ -4,6 +4,7 @@ from datetime import datetime
 import openai
 import base64
 import os
+import pandas as pd
 
 # 1. FUNCIÓN PARA CARGAR IMÁGENES
 def get_base64_of_bin_file(bin_file):
@@ -62,7 +63,7 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) - LOGO AMPLIADO Y REDES COMPLETAS
+# 5. BARRA LATERAL (SIDEBAR)
 with st.sidebar:
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
@@ -86,7 +87,6 @@ with st.sidebar:
     else:
         st.title("⚖️ Estudio Jurídico Leites")
         
-    # Datos centrados y redes
     st.markdown(
         """
         <div style="text-align: center;">
@@ -116,92 +116,128 @@ with st.sidebar:
     st.title("🛡️ Confidencialidad")
     st.info("Este portal está amparado por el **secreto profesional**. Los datos de tu consulta son 100% anónimos y encriptados.")
     st.divider()
-    st.markdown("### ¿Emergencia inminente?")
-    st.error("Ante violencia física o peligro de vida actual, comunícate de inmediato a la línea **144** o al **911**.")
+    
+    # NUEVO: PANEL DE ACCESO OCULTO PARA EL ADMINISTRADOR
+    with st.expander("⚙️ Acceso Interno"):
+        clave_ingresada = st.text_input("Contraseña de seguridad:", type="password")
+        if clave_ingresada == "Leites2026":
+            st.session_state['acceso_concedido'] = True
+            st.success("Acceso autorizado.")
+        elif clave_ingresada != "":
+            st.error("Contraseña incorrecta.")
+            st.session_state['acceso_concedido'] = False
 
-# 6. INTERFAZ PRINCIPAL - TÍTULO CON TIPOGRAFÍA SOBRIA (LORA)
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
-    .titulo-estudio {
-        font-family: 'Lora', serif;
-        font-size: 3.3rem;
-        font-weight: 500;
-        color: #ffffff;
-        margin-bottom: 0.2em;
-        line-height: 1.2;
-    }
-    </style>
-    <div class="titulo-estudio">Leites & Asociados</div>
-""", unsafe_allow_html=True)
-
-st.markdown("Selecciona tu problemática para obtener un encuadre legal y conocer las medidas urgentes a tomar.")
-
-tema = st.selectbox("1. ¿Cuál es el motivo principal de tu consulta?", 
-                          ["Selecciona una opción", 
-                           "Difusión no consentida de imágenes / Violencia Digital", 
-                           "Sextorsión o Chantaje Online", 
-                           "Estafas virtuales o Robo de identidad",
-                           "Violencia de género (Ley 26.485)",
-                           "Hostigamiento o Acoso",
-                           "Otro delito penal"])
-
-plataforma = st.selectbox("2. ¿Dónde o cómo está ocurriendo el hecho?", 
-                          ["Selecciona una opción", "Redes Sociales (Instagram, Facebook, etc.)", "Mensajería (WhatsApp, Telegram)", "Entorno físico / presencial", "Múltiples medios"])
-
-st.divider()
-
-if st.button("Generar Evaluación Jurídica", type="primary", use_container_width=True):
-    if tema == "Selecciona una opción" or plataforma == "Selecciona una opción":
-        st.warning("⚠️ Por favor, completa ambas preguntas para poder evaluar tu caso.")
+# 6. LÓGICA DE PANTALLA DIVIDIDA (PANEL DE CONTROL vs EVALUADOR PÚBLICO)
+if st.session_state.get('acceso_concedido', False):
+    # --- PANTALLA PRIVADA (SOLO PARA VOS) ---
+    st.markdown("""
+        <style>
+        .titulo-panel { font-family: 'Lora', serif; font-size: 2.8rem; color: #ffffff; }
+        </style>
+        <div class="titulo-panel">📊 Panel de Control del Estudio</div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("Bienvenido al registro interno. Aquí puedes visualizar y descargar las estadísticas de uso de tu Evaluador Legal.")
+    
+    conn = sqlite3.connect('consultas_legales_v2.db')
+    df = pd.read_sql_query("SELECT id as ID, fecha as Fecha, tema as Tema, plataforma as Plataforma, nivel_riesgo as IA_Status FROM triage ORDER BY id DESC", conn)
+    conn.close()
+    
+    st.dataframe(df, use_container_width=True)
+    
+    if not df.empty:
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Descargar Base de Datos Completa (CSV)",
+            data=csv,
+            file_name=f"estadisticas_estudio_leites_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+            type="primary"
+        )
     else:
-        with st.spinner("Analizando situación..."):
-            try:
-                api_key_secreta = st.secrets["OPENAI_API_KEY"]
-                client = openai.OpenAI(api_key=api_key_secreta)
-                
-                prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites. Habla de forma directa, sencilla y coloquial para que cualquier persona te entienda sin jerga legal. Tu respuesta debe ser extremadamente breve."
-                prompt_usuario = f"""
-                Analiza este caso:
-                - Conflicto: {tema}
-                - Medio: {plataforma}
-                
-                REGLAS ESTRICTAS PARA TU RESPUESTA:
-                1. Empieza el texto EXACTAMENTE con esta frase, en mayúsculas: "SEGUN EL DR. CRISTIAN LEITES,"
-                2. Luego, escribe solo 2 o 3 oraciones simples explicando qué hacer de inmediato (por ejemplo: no borrar evidencia, hacer capturas de pantalla, hacer la denuncia). 
-                3. Termina el texto EXACTAMENTE con esta frase: "el Dr. Cristian Leites se encuentra con disponibilidad para tomar el caso."
-                """
-                
-                respuesta = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": prompt_sistema},
-                        {"role": "user", "content": prompt_usuario}
-                    ],
-                    temperature=0.2 
-                )
-                
-                analisis_ia = respuesta.choices[0].message.content
-                
-                guardar_consulta(tema, plataforma, "EVALUADO_POR_IA")
-                st.success("Evaluación generada correctamente.")
-                
-                st.markdown("### 🚨 Respuesta Rápida")
-                st.info(analisis_ia)
-                
-                st.divider()
-                st.markdown("### 📲 Contacto Directo")
-                
-                numero_whatsapp = "5493764876017" 
-                mensaje = "Hola Dr. Leites. Acabo de utilizar el Evaluador Legal en su sitio web y necesito coordinar una consulta profesional urgente."
-                enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
-                
-                st.markdown(f'''
-                    <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
-                        Contactar al Estudio por WhatsApp
-                    </a>
-                ''', unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error(f"Hubo un error de servidor. Por favor, intenta más tarde. Detalle: {e}")
+        st.info("Aún no hay consultas registradas en la base de datos.")
+    
+    if st.button("Cerrar Sesión"):
+        st.session_state['acceso_concedido'] = False
+        st.rerun()
+
+else:
+    # --- PANTALLA PÚBLICA (LO QUE VEN LOS CLIENTES) ---
+    st.markdown("""
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
+        .titulo-estudio { font-family: 'Lora', serif; font-size: 3.3rem; font-weight: 500; color: #ffffff; margin-bottom: 0.2em; line-height: 1.2; }
+        </style>
+        <div class="titulo-estudio">Leites & Asociados</div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("Selecciona tu problemática para obtener un encuadre legal y conocer las medidas urgentes a tomar.")
+
+    tema = st.selectbox("1. ¿Cuál es el motivo principal de tu consulta?", 
+                              ["Selecciona una opción", 
+                               "Difusión no consentida de imágenes / Violencia Digital", 
+                               "Sextorsión o Chantaje Online", 
+                               "Estafas virtuales o Robo de identidad",
+                               "Violencia de género (Ley 26.485)",
+                               "Hostigamiento o Acoso",
+                               "Otro delito penal"])
+
+    plataforma = st.selectbox("2. ¿Dónde o cómo está ocurriendo el hecho?", 
+                              ["Selecciona una opción", "Redes Sociales (Instagram, Facebook, etc.)", "Mensajería (WhatsApp, Telegram)", "Entorno físico / presencial", "Múltiples medios"])
+
+    st.divider()
+
+    if st.button("Generar Evaluación Jurídica", type="primary", use_container_width=True):
+        if tema == "Selecciona una opción" or plataforma == "Selecciona una opción":
+            st.warning("⚠️ Por favor, completa ambas preguntas para poder evaluar tu caso.")
+        else:
+            with st.spinner("Analizando situación..."):
+                try:
+                    api_key_secreta = st.secrets["OPENAI_API_KEY"]
+                    client = openai.OpenAI(api_key=api_key_secreta)
+                    
+                    prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites. Habla de forma directa, sencilla y coloquial para que cualquier persona te entienda sin jerga legal. Tu respuesta debe ser extremadamente breve."
+                    prompt_usuario = f"""
+                    Analiza este caso:
+                    - Conflicto: {tema}
+                    - Medio: {plataforma}
+                    
+                    REGLAS ESTRICTAS PARA TU RESPUESTA:
+                    1. Empieza el texto EXACTAMENTE con esta frase, en mayúsculas: "SEGUN EL DR. CRISTIAN LEITES,"
+                    2. Luego, escribe solo 2 o 3 oraciones simples explicando qué hacer de inmediato (por ejemplo: no borrar evidencia, hacer capturas de pantalla, hacer la denuncia). 
+                    3. Termina el texto EXACTAMENTE con esta frase: "el Dr. Cristian Leites se encuentra con disponibilidad para tomar el caso."
+                    """
+                    
+                    respuesta = client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "system", "content": prompt_sistema},
+                            {"role": "user", "content": prompt_usuario}
+                        ],
+                        temperature=0.2 
+                    )
+                    
+                    analisis_ia = respuesta.choices[0].message.content
+                    
+                    guardar_consulta(tema, plataforma, "EVALUADO_POR_IA")
+                    st.success("Evaluación generada correctamente.")
+                    
+                    st.markdown("### 🚨 Respuesta Rápida")
+                    st.info(analisis_ia)
+                    
+                    st.divider()
+                    st.markdown("### 📲 Contacto Directo")
+                    
+                    numero_whatsapp = "5493764876017" 
+                    mensaje = "Hola Dr. Leites. Acabo de utilizar el Evaluador Legal en su sitio web y necesito coordinar una consulta profesional urgente."
+                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                    
+                    st.markdown(f'''
+                        <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
+                            Contactar al Estudio por WhatsApp
+                        </a>
+                    ''', unsafe_allow_html=True)
+                    
+                except Exception as e:
+                    st.error(f"Hubo un error de servidor. Por favor, intenta más tarde. Detalle: {e}")
