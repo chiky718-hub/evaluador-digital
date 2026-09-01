@@ -4,9 +4,8 @@ from datetime import datetime
 import openai
 import base64
 import os
-from PIL import Image # Agregamos PIL para abrir el logo de forma segura
 
-# 1. FUNCIÓN PARA CARGAR LA IMAGEN DE FONDO
+# 1. FUNCIÓN PARA CARGAR IMÁGENES DE FORMA SEGURA
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
@@ -15,27 +14,18 @@ def get_base64_of_bin_file(bin_file):
 # 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 3. APLICAR FONDO CON ALTO CONTRASTE PARA LA INTERFAZ
+# 3. APLICAR FONDO CON FILTRO OSCURO (ALTO CONTRASTE)
 if os.path.exists('fondo.jpeg'):
     try:
         fondo_base64 = get_base64_of_bin_file('fondo.jpeg')
+        # Usamos linear-gradient para oscurecer la foto directamente
         page_bg_img = f'''
         <style>
         .stApp {{
-            background-image: url("data:image/jpeg;base64,{fondo_base64}");
+            background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url("data:image/jpeg;base64,{fondo_base64}");
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-        }}
-        /* Diseño para garantizar que la barra lateral y los botones tengan visibilidad clara */
-        [data-testid="stAppViewContainer"] .main .block-container {{
-            background-color: rgba(14, 17, 23, 0.92);
-            border-radius: 12px;
-            padding: 2.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        }}
-        [data-testid="stSidebar"] > div:first-child {{
-            background-color: rgba(14, 17, 23, 0.95);
         }}
         </style>
         '''
@@ -65,14 +55,14 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) CON APERTURA SEGURA DE LOGO
+# 5. BARRA LATERAL (SIDEBAR) CON LOGO EN HTML (A PRUEBA DE FALLOS)
 with st.sidebar:
-    if os.path.exists('logo.jpg'):
+    if os.path.exists('logo.png'):
         try:
-            img = Image.open('logo.jpg')
-            st.image(img, use_container_width=True)
-        except Exception as e:
-            st.error(f"Error cargando logo: {e}")
+            logo_base64 = get_base64_of_bin_file('logo.png')
+            st.markdown(f'<img src="data:image/png;base64,{logo_base64}" width="100%" style="border-radius: 5px; margin-bottom: 20px;">', unsafe_allow_html=True)
+        except Exception:
+            st.title("⚖️ Estudio Jurídico Leites")
     else:
         st.title("⚖️ Estudio Jurídico Leites")
         
