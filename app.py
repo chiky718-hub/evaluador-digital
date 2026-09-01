@@ -14,10 +14,10 @@ def get_base64_of_bin_file(bin_file):
 # 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
 
-# 3. APLICAR FONDO CON EFECTO MARCA DE AGUA (A prueba de errores)
-if os.path.exists('fondo.jpg'):
+# 3. APLICAR FONDO CON EFECTO MARCA DE AGUA (Corregido a .jpeg)
+if os.path.exists('fondo.jpeg'):
     try:
-        fondo_base64 = get_base64_of_bin_file('fondo.jpg')
+        fondo_base64 = get_base64_of_bin_file('fondo.jpeg')
         page_bg_img = f'''
         <style>
         .stApp {{
@@ -26,7 +26,7 @@ if os.path.exists('fondo.jpg'):
             background-position: center;
             background-attachment: fixed;
         }}
-        /* Capa oscura semitransparente para que el texto sea legible */
+        /* Capa oscura semitransparente para garantizar la legibilidad de textos y botones */
         .stApp::before {{
             content: "";
             position: absolute;
@@ -62,11 +62,10 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) CON LOGO SEGURO
+# 5. BARRA LATERAL (SIDEBAR) CON LOGO (Corregido a .jpg)
 with st.sidebar:
-    # Verifica si el archivo del logo existe antes de intentar mostrarlo
-    if os.path.exists('logo.png'):
-        st.image('logo.png', use_column_width=True)
+    if os.path.exists('logo.jpg'):
+        st.image('logo.jpg', use_column_width=True)
     else:
         st.title("⚖️ Estudio Jurídico Leites")
         
