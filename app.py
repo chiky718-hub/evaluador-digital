@@ -62,7 +62,7 @@ def guardar_consulta(tema, plataforma, nivel_riesgo):
 
 init_db()
 
-# 5. BARRA LATERAL (SIDEBAR) - LOGO AMPLIADO
+# 5. BARRA LATERAL (SIDEBAR) - LOGO AMPLIADO Y REDES COMPLETAS
 with st.sidebar:
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
@@ -73,7 +73,6 @@ with st.sidebar:
     if logo_path:
         try:
             logo_base64 = get_base64_of_bin_file(logo_path)
-            # Cambiamos scale(1.15) a scale(1.6) y width a 100% para que el logo se vea mucho más grande
             st.markdown(
                 f'''
                 <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 30px; margin-top: 15px;">
@@ -101,6 +100,9 @@ with st.sidebar:
             </a>
             <a href="https://www.facebook.com/cristian.leites.560443?mibextid=wwXIfr" target="_blank" title="Facebook">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" width="30" height="30">
+            </a>
+            <a href="https://www.linkedin.com/in/cristian-leites-976282433" target="_blank" title="LinkedIn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" width="30" height="30">
             </a>
             <a href="https://wa.me/5493764876017" target="_blank" title="WhatsApp">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="30" height="30">
