@@ -5,6 +5,7 @@ import openai
 import base64
 import os
 import pandas as pd
+from fpdf import FPDF
 
 # 1. FUNCIÓN PARA CARGAR IMÁGENES
 def get_base64_of_bin_file(bin_file):
@@ -12,7 +13,64 @@ def get_base64_of_bin_file(bin_file):
         data = f.read()
     return base64.b64encode(data).decode()
 
-# 2. CONFIGURACIÓN DE PÁGINA (Actualizada con título profesional y favicon)
+# CLASE PARA GENERAR EL PDF DEL ESTUDIO
+class PDFEstudio(FPDF):
+    def header(self):
+        # Membrete superior
+        self.set_font('helvetica', 'B', 14)
+        self.set_text_color(30, 30, 30)
+        self.cell(0, 10, 'LEITES & ASOCIADOS - ESTUDIO JURÍDICO', 0, 1, 'C')
+        self.set_font('helvetica', 'I', 9)
+        self.set_text_color(100, 100, 100)
+        self.cell(0, 5, 'Dr. Cristian Dario Leites | Abogado Penalista (M.P. N° 4925) - Posadas, Misiones', 0, 1, 'C')
+        self.ln(5)
+        self.set_draw_color(200, 200, 200)
+        self.line(10, self.get_y(), 200, self.get_y())
+        self.ln(8)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('helvetica', 'I', 8)
+        self.set_text_color(120, 120, 120)
+        self.cell(0, 10, f'Documento generado digitalmente - Página {self.page_no()}', 0, 0, 'C')
+
+def generar_pdf_informe(titulo_caso, detalle_analisis, datos_extra=""):
+    pdf = PDFEstudio()
+    pdf.add_page()
+    
+    # Fecha y Hora del reporte
+    pdf.set_font('helvetica', '', 10)
+    pdf.set_text_color(80, 80, 80)
+    pdf.cell(0, 6, f"Fecha de emisión: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}", 0, 1, 'R')
+    pdf.ln(5)
+    
+    # Título del reporte
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 8, f"INFORME DE ORIENTACIÓN JURÍDICA: {titulo_caso}", 0, 1, 'L')
+    pdf.ln(3)
+    
+    if datos_extra:
+        pdf.set_font('helvetica', 'B', 10)
+        pdf.cell(0, 6, f"Detalles específicos: {datos_extra}", 0, 1, 'L')
+        pdf.ln(3)
+        
+    # Contenido del análisis
+    pdf.set_font('helvetica', 'B', 10)
+    pdf.cell(0, 6, "Directrices del Estudio:", 0, 1, 'L')
+    pdf.set_font('helvetica', '', 10)
+    pdf.set_text_color(40, 40, 40)
+    pdf.multi_cell(0, 6, detalle_analisis)
+    pdf.ln(10)
+    
+    # Aviso legal / secreto profesional
+    pdf.set_font('helvetica', 'I', 9)
+    pdf.set_text_color(100, 100, 100)
+    pdf.multi_cell(0, 5, "Aviso: Este informe preliminar se encuentra amparado por el secreto profesional y constituye una orientación técnica inicial basada en los datos proporcionados por el consultante.")
+    
+    return pdf.output(dest='S').encode('latin1')
+
+# 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
     page_title="Leites & Asociados | Estudio Jurídico",
     page_icon="⚖️",
@@ -46,7 +104,7 @@ if fondo_path:
     except Exception:
         pass
 
-# 4. BASE DE DATOS (Con actualización automática de columnas)
+# 4. BASE DE DATOS
 def init_db():
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
@@ -76,11 +134,10 @@ def guardar_consulta(rol, tema, detalle, nivel_riesgo):
 
 init_db()
 
-# Inicializar estados de navegación si no existen
 if 'rol_seleccionado' not in st.session_state:
     st.session_state['rol_seleccionado'] = None
 
-# 5. BARRA LATERAL (SIDEBAR - LIMPIA Y SOBRIA)
+# 5. BARRA LATERAL (SIDEBAR)
 with st.sidebar:
     logo_path = None
     for ext in ['logo.png', 'logo.jpg', 'logo.jpeg']:
@@ -143,9 +200,8 @@ with st.sidebar:
             st.error("Contraseña incorrecta.")
             st.session_state['acceso_concedido'] = False
 
-# 6. LÓGICA PRINCIPAL (PANEL DE CONTROL vs PANTALLA PÚBLICA)
+# 6. LÓGICA PRINCIPAL
 if st.session_state.get('acceso_concedido', False):
-    # --- PANTALLA PRIVADA (ADMIN) ---
     st.markdown("""
         <style>
         .titulo-panel { font-family: 'Lora', serif; font-size: 2.8rem; color: #ffffff; }
@@ -178,7 +234,6 @@ if st.session_state.get('acceso_concedido', False):
         st.rerun()
 
 else:
-    # --- PANTALLA PÚBLICA ---
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
@@ -189,7 +244,6 @@ else:
         <div class="subtitulo-rol">Seleccione el área legal correspondiente a su consulta para recibir orientación profesional.</div>
     """, unsafe_allow_html=True)
 
-    # PASO 1: SELECCIÓN DE ÁREA / ROL (TRES BOTONES)
     if st.session_state['rol_seleccionado'] is None:
         if st.button("🛡️ Fui Víctima / Denunciante\n\n(Derecho Penal - Necesito accionar o protección)", use_container_width=True):
             st.session_state['rol_seleccionado'] = 'VICTIMA'
@@ -204,8 +258,6 @@ else:
             st.rerun()
 
         st.markdown("<br>", unsafe_allow_html=True)
-        
-        # --- TARJETA INSTITUCIONAL CON FOTO EN LA PANTALLA PRINCIPAL ---
         st.markdown("---")
         
         col_img, col_txt = st.columns([1, 2.5])
@@ -233,14 +285,13 @@ else:
             """, unsafe_allow_html=True)
 
     else:
-        # BOTÓN PARA VOLVER ATRÁS
         if st.button("⬅️ Volver al menú principal"):
             st.session_state['rol_seleccionado'] = None
             st.rerun()
 
         st.divider()
 
-        # ROL 1: VÍCTIMA / DENUNCIANTE (PENAL)
+        # ROL 1: VÍCTIMA / DENUNCIANTE
         if st.session_state['rol_seleccionado'] == 'VICTIMA':
             st.subheader("🛡️ Asistencia a Víctimas y Querellantes")
             
@@ -295,6 +346,16 @@ else:
                             st.markdown("### 🚨 Directivas Urgentes")
                             st.info(analisis_ia)
                             
+                            # BOTÓN DE DESCARGA EN PDF
+                            pdf_bytes = generar_pdf_informe(tema, analisis_ia, f"Medio: {plataforma}")
+                            st.download_button(
+                                label="📥 Descargar Informe en PDF",
+                                data=pdf_bytes,
+                                file_name=f"Informe_Legal_Victima_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                mime="application/pdf",
+                                type="primary"
+                            )
+                            
                             st.divider()
                             st.markdown("### 📲 Contacto Directo con el Estudio")
                             numero_whatsapp = "5493764876017" 
@@ -311,7 +372,7 @@ else:
                         except Exception as e:
                             st.error(f"Error de servidor: {e}")
 
-        # ROL 2: ACUSADO / IMPUTADO (PENAL)
+        # ROL 2: ACUSADO / IMPUTADO
         elif st.session_state['rol_seleccionado'] == 'ACUSADO':
             st.subheader("⚖️ Defensa Penal e Imputados")
             
@@ -369,6 +430,16 @@ else:
                             st.markdown("### 🚨 Pautas Defensivas Urgentes")
                             st.info(analisis_ia)
                             
+                            # BOTÓN DE DESCARGA EN PDF
+                            pdf_bytes = generar_pdf_informe(f"Defensa Penal - {tema}", analisis_ia, f"Situación: {estado_libertad}")
+                            st.download_button(
+                                label="📥 Descargar Informe en PDF",
+                                data=pdf_bytes,
+                                file_name=f"Informe_Legal_Defensa_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                mime="application/pdf",
+                                type="primary"
+                            )
+                            
                             st.divider()
                             st.markdown("### 📲 Contacto Directo con el Estudio")
                             numero_whatsapp = "5493764876017" 
@@ -385,7 +456,7 @@ else:
                         except Exception as e:
                             st.error(f"Error de servidor: {e}")
 
-        # ROL 3: OTRAS RAMAS DEL DERECHO (CON SUBMENÚ LABORAL DINÁMICO)
+        # ROL 3: OTRAS RAMAS DEL DERECHO
         elif st.session_state['rol_seleccionado'] == 'CIVIL_LABORAL':
             st.subheader("📂 Otras Ramas del Derecho")
             
@@ -398,7 +469,6 @@ else:
                                          "Accidentes de Tránsito / Daños y Perjuicios",
                                          "Otro asesoramiento civil / comercial"])
 
-            # --- SUBMENÚ DINÁMICO PARA DERECHO LABORAL ---
             if "Derecho Laboral" in rama_derecho:
                 st.markdown("---")
                 st.markdown("#### 👷 Asistencia en Derecho Laboral")
@@ -409,7 +479,6 @@ else:
                                              "Accidente de trabajo / Enfermedad profesional",
                                              "Falta de registración (En negro) / Diferencias salariales"])
                 
-                # CASO A: DESPIDO (SIN O CON CAUSA)
                 if "Despido" in tipo_laboral:
                     col_f1, col_f2 = st.columns(2)
                     with col_f1:
@@ -465,6 +534,16 @@ else:
                                     st.info(analisis_ia)
                                     st.metric(label="Estimación Indemnizatoria Orientativa", value=f"${estimacion_indemnizacion:,.2f}")
                                     
+                                    # BOTÓN DE DESCARGA EN PDF
+                                    pdf_bytes = generar_pdf_informe(f"Derecho Laboral - {tipo_laboral}", analisis_ia, f"Estimado: ${estimacion_indemnizacion:,.2f}")
+                                    st.download_button(
+                                        label="📥 Descargar Informe en PDF",
+                                        data=pdf_bytes,
+                                        file_name=f"Informe_Legal_Laboral_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                        mime="application/pdf",
+                                        type="primary"
+                                    )
+                                    
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
                                     f_ing_str = fecha_ingreso.strftime('%d/%m/%Y')
@@ -481,7 +560,6 @@ else:
                                 except Exception as e:
                                     st.error(f"Error: {e}")
 
-                # CASO B: ACCIDENTE DE TRABAJO
                 elif "Accidente" in tipo_laboral:
                     tiene_art = st.selectbox("¿Tenía cobertura de ART declarada al momento del accidente?",
                                             ["Selecciona una opción",
@@ -525,6 +603,16 @@ else:
                                     st.markdown("### 🚨 Pautas Médicas y Legales Urgentes")
                                     st.info(analisis_ia)
                                     
+                                    # BOTÓN DE DESCARGA EN PDF
+                                    pdf_bytes = generar_pdf_informe("Accidente de Trabajo / ART", analisis_ia, f"Estado ART: {tiene_art}")
+                                    st.download_button(
+                                        label="📥 Descargar Informe en PDF",
+                                        data=pdf_bytes,
+                                        file_name=f"Informe_Legal_Accidente_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                        mime="application/pdf",
+                                        type="primary"
+                                    )
+                                    
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
                                     numero_whatsapp = "5493764876017"
@@ -540,7 +628,6 @@ else:
                                 except Exception as e:
                                     st.error(f"Error: {e}")
 
-                # CASO C: OTROS CONFLICTOS LABORALES
                 else:
                     detalle_lab = st.text_area("Describa su situación laboral (diferencias salariales, falta de registración, etc.):")
                     if st.button("Generar Orientación Laboral", type="primary", use_container_width=True):
@@ -549,7 +636,18 @@ else:
                         else:
                             guardar_consulta("LABORAL", tipo_laboral, detalle_lab[:50], "EVALUADO_POR_IA")
                             st.success("Orientación registrada con éxito.")
-                            st.info("SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES: Es fundamental conservar recibos de sueldo, registrar testigos y realizar las intimaciones por telegrama laboral respaldado por asesoramiento letrado. El Dr. Leites se encuentra a disposición para coordinar una entrevista y evaluar su caso.")
+                            analisis_texto = "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES: Es fundamental conservar recibos de sueldo, registrar testigos y realizar las intimaciones por telegrama laboral respaldado por asesoramiento letrado. El Dr. Leites se encuentra a disposición para coordinar una entrevista y evaluar su caso."
+                            st.info(analisis_texto)
+                            
+                            # BOTÓN DE DESCARGA EN PDF
+                            pdf_bytes = generar_pdf_informe(f"Laboral - {tipo_laboral}", analisis_texto)
+                            st.download_button(
+                                label="📥 Descargar Informe en PDF",
+                                data=pdf_bytes,
+                                file_name=f"Informe_Legal_Laboral_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                mime="application/pdf",
+                                type="primary"
+                            )
                             
                             mensaje = f"Hola Dr. Leites. Consulté por su web sobre un tema laboral ({tipo_laboral}) y necesito coordinar una entrevista."
                             enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
@@ -560,7 +658,6 @@ else:
                                 </a>
                             ''', unsafe_allow_html=True)
 
-            # --- SI ELIGE OTRA RAMA EXTRA-LABORAL (FAMILIA, SUCESIONES, ETC.) ---
             else:
                 if rama_derecho != "Selecciona una opción":
                     detalle_consulta = st.text_area("2. Describa brevemente su situación o duda principal:", 
@@ -600,6 +697,16 @@ else:
                                     st.success("Orientación generada correctamente.")
                                     st.markdown("### 📋 Orientación Profesional")
                                     st.info(analisis_ia)
+                                    
+                                    # BOTÓN DE DESCARGA EN PDF
+                                    pdf_bytes = generar_pdf_informe(rama_derecho, analisis_ia, f"Detalle: {detalle_consulta[:40]}...")
+                                    st.download_button(
+                                        label="📥 Descargar Informe en PDF",
+                                        data=pdf_bytes,
+                                        file_name=f"Informe_Legal_Civil_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                        mime="application/pdf",
+                                        type="primary"
+                                    )
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
