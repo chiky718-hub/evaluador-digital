@@ -12,8 +12,13 @@ def get_base64_of_bin_file(bin_file):
         data = f.read()
     return base64.b64encode(data).decode()
 
-# 2. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(page_title="Estudio Jurídico Leites | Evaluación Legal", page_icon="⚖️", layout="centered")
+# 2. CONFIGURACIÓN DE PÁGINA (Actualizada con título profesional y favicon)
+st.set_page_config(
+    page_title="Leites & Asociados | Estudio Jurídico",
+    page_icon="⚖️",
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
 
 # 3. APLICAR FONDO CON FILTRO OSCURO
 fondo_path = None
@@ -311,10 +316,10 @@ else:
             st.subheader("⚖️ Defensa Penal e Imputados")
             
             estado_libertad = st.selectbox("1. Indique su situación de libertad actual:",
-                                          ["Selecciona una opción",
-                                           "Estoy en libertad / Notificado de la causa",
-                                           "Tengo orden de detención / captura pendiente",
-                                           "Estoy detenido en comisaría o dependencia policial (¡URGENTE!)"])
+                                         ["Selecciona una opción",
+                                          "Estoy en libertad / Notificado de la causa",
+                                          "Tengo orden de detención / captura pendiente",
+                                          "Estoy detenido en comisaría o dependencia policial (¡URGENTE!)"])
 
             tema = st.selectbox("2. Seleccione el delito que se le atribuye:", 
                                 ["Selecciona una opción", 
@@ -338,7 +343,7 @@ else:
                             client = openai.OpenAI(api_key=api_key_secreta)
                             
                             prompt_sistema = """Eres el asistente legal de triage del Dr. Cristian Leites, abogado penalista en Posadas, Misiones. 
-                            Asesoras a personas acusadas o imputadas. Tu tono es técnico, estrictamente reservado, garantista y urgente. Si el cliente está detenido o tiene pedido de captura, prioriza la excarcelación y el resguardo de derechos constitucionales."""
+                            Asesoras a personas acusadas o imputadas. Tu tono es técnico, estrictamente reservado, garantista y urgente. Si el cliente está detenido o tiene pedido de captura, prioriza la excarcelación y el resguardo de garantías constitucionales."""
                             
                             prompt_usuario = f"""
                             Analiza este caso como DEFENSA PENAL:
@@ -559,7 +564,7 @@ else:
             else:
                 if rama_derecho != "Selecciona una opción":
                     detalle_consulta = st.text_area("2. Describa brevemente su situación o duda principal:", 
-                                                      placeholder="Ej: Necesito iniciar una demanda por alimentos o sucesión...")
+                                                   placeholder="Ej: Necesito iniciar una demanda por alimentos o sucesión...")
 
                     st.divider()
 
@@ -599,7 +604,7 @@ else:
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
                                     mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
-                                    enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                                    enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
                                         <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
