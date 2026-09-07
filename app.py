@@ -278,9 +278,29 @@ else:
             st.markdown("### Dr. Cristian Dario Leites")
             st.markdown("<span style='color: #dddddd; font-size: 0.9em;'>Abogado Penalista (M.P. N° 4925)</span>", unsafe_allow_html=True)
             st.markdown("""
-                <div style="font-size: 0.92em; color: #cccccc; line-height: 1.4; margin-top: 8px;">
+                <div style="font-size: 0.92em; color: #cccccc; line-height: 1.4; margin-top: 8px; margin-bottom: 15px;">
                     Especializado en litigios penales complejos, derecho penal y asesoramiento legal estratégico en la ciudad de Posadas, Misiones. 
                     Compromiso absoluto con la defensa técnica rigurosa, la ética profesional y la protección de los derechos de nuestros representados.
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # BOTONES DE CONTACTO EN PANTALLA PRINCIPAL
+            st.markdown("""
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <a href="https://wa.me/5493764876017" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #25D366; color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 0.9em;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22"> Contactar ahora
+                        </div>
+                    </a>
+                    <a href="https://www.instagram.com/cristianleites_ok?utm_source=qr" target="_blank" title="Instagram">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" width="30">
+                    </a>
+                    <a href="https://www.facebook.com/cristian.leites.560443?mibextid=wwXIfr" target="_blank" title="Facebook">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" width="30">
+                    </a>
+                    <a href="https://www.linkedin.com/in/cristian-leites-976282433" target="_blank" title="LinkedIn">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" width="30">
+                    </a>
                 </div>
             """, unsafe_allow_html=True)
 
