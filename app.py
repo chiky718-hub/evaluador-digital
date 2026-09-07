@@ -68,7 +68,7 @@ def generar_pdf_informe(titulo_caso, detalle_analisis, datos_extra=""):
     pdf.set_text_color(100, 100, 100)
     pdf.multi_cell(0, 5, "Aviso: Este informe preliminar se encuentra amparado por el secreto profesional y constituye una orientación técnica inicial basada en los datos proporcionados por el consultante.")
     
-    return pdf.output(dest='S').encode('latin1')
+    return pdf.output(dest='S')
 
 # 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
