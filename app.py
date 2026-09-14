@@ -16,7 +16,6 @@ def get_base64_of_bin_file(bin_file):
 # CLASE PARA GENERAR EL PDF DEL ESTUDIO
 class PDFEstudio(FPDF):
     def header(self):
-        # Membrete superior
         self.set_font('helvetica', 'B', 14)
         self.set_text_color(30, 30, 30)
         self.cell(0, 10, 'LEITES & ASOCIADOS - ESTUDIO JURÍDICO', 0, 1, 'C')
@@ -38,13 +37,11 @@ def generar_pdf_informe(titulo_caso, detalle_analisis, datos_extra=""):
     pdf = PDFEstudio()
     pdf.add_page()
     
-    # Fecha y Hora del reporte
     pdf.set_font('helvetica', '', 10)
     pdf.set_text_color(80, 80, 80)
     pdf.cell(0, 6, f"Fecha de emisión: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}", 0, 1, 'R')
     pdf.ln(5)
     
-    # Título del reporte
     pdf.set_font('helvetica', 'B', 12)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 8, f"INFORME DE ORIENTACIÓN JURÍDICA: {titulo_caso}", 0, 1, 'L')
@@ -55,7 +52,6 @@ def generar_pdf_informe(titulo_caso, detalle_analisis, datos_extra=""):
         pdf.cell(0, 6, f"Detalles específicos: {datos_extra}", 0, 1, 'L')
         pdf.ln(3)
         
-    # Contenido del análisis
     pdf.set_font('helvetica', 'B', 10)
     pdf.cell(0, 6, "Directrices del Estudio:", 0, 1, 'L')
     pdf.set_font('helvetica', '', 10)
@@ -63,7 +59,6 @@ def generar_pdf_informe(titulo_caso, detalle_analisis, datos_extra=""):
     pdf.multi_cell(0, 6, detalle_analisis)
     pdf.ln(10)
     
-    # Aviso legal / secreto profesional
     pdf.set_font('helvetica', 'I', 9)
     pdf.set_text_color(100, 100, 100)
     pdf.multi_cell(0, 5, "Aviso: Este informe preliminar se encuentra amparado por el secreto profesional y constituye una orientación técnica inicial basada en los datos proporcionados por el consultante.")
@@ -204,7 +199,6 @@ with st.sidebar:
     
     st.divider()
     
-    # BOTONES DE NAVEGACIÓN EN SIDEBAR
     if st.button("🏠 Inicio / Consulta Legal", use_container_width=True):
         st.session_state['vista_actual'] = 'INICIO'
         st.session_state['rol_seleccionado'] = None
@@ -261,13 +255,11 @@ if st.session_state.get('acceso_concedido', False):
             
     with tab_panel2:
         st.markdown("### Publicar Nuevo Artículo o Ensayo Jurídico")
-        st.markdown("Escriba o pegue su artículo completo. Se mostrará automáticamente en la sección pública de la web con opción de compartir.")
+        st.markdown("Escriba o pegue su artículo completo. Se asignará un enlace directo único para compartir en redes.")
         
         with st.form("form_nuevo_articulo"):
             titulo_art = st.text_input("Título de la Publicación:")
             contenido_art = st.text_area("Contenido del Artículo (Texto completo / Ensayo):", height=350, placeholder="Escriba o pegue aquí su artículo...")
-            
-            # Subir imagen opcional
             imagen_subida = st.file_uploader("Imagen de Portada (Opcional):", type=["jpg", "jpeg", "png"])
             
             submit_art = st.form_submit_button("🚀 Publicar Artículo", type="primary")
@@ -311,33 +303,78 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
     articulos = cursor.fetchall()
     conn.close()
     
+    # DETECTAR SI SE ESTÁ VISITANDO UN ARTÍCULO ESPECÍFICO POR ENLACE (QUERY PARAM)
+    query_params = st.query_params
+    articulo_seleccionado_id = query_params.get("id", None)
+    
+    if articulo_seleccionado_id:
+        try:
+            articulo_seleccionado_id = int(articulo_seleccionado_id)
+        except:
+            articulo_seleccionado_id = None
+
     if not articulos:
         st.info("Aún no hay artículos publicados. Próximamente se compartirán análisis jurídicos y ponencias.")
     else:
-        for art_id, fecha, titulo, contenido, imagen_path in articulos:
-            st.markdown(f"### {titulo}")
+        # Si hay un ID específico en el link, filtramos para mostrar solo ese artículo
+        articulos_a_mostrar = articulos
+        if articulo_seleccionado_id:
+            articulos_a_mostrar = [a for a in articulos if a[0] == articulo_seleccionado_id]
+            if articulos_a_mostrar:
+                if st.button("⬅️ Ver todos los artículos"):
+                    st.query_params.clear()
+                    st.rerun()
+                st.divider()
+
+        for art_id, fecha, titulo, contenido, imagen_path in articulos_a_mostrar:
+            st.markdown(f"## {titulo}")
             st.markdown(f"<span style='color: #aaaaaa; font-size: 0.85em;'>📅 Publicado el {fecha}</span>", unsafe_allow_html=True)
             
             if imagen_path and os.path.exists(imagen_path):
                 st.image(imagen_path, use_container_width=True)
                 
-            # Mostrar contenido formateado
-            st.markdown(f"<div style='background-color: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; color: #dddddd; line-height: 1.6; margin-top: 10px; margin-bottom: 15px;'>{contenido.replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; color: #eeeeee; line-height: 1.7; margin-top: 10px; margin-bottom: 20px;'>{contenido.replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
             
-            # Botones para compartir
-            url_sitio = "https://www.estudioleites.com.ar"
-            texto_wapp = f"Leé este artículo jurídico del Dr. Cristian Leites: *{titulo}*. Ingresá en: {url_sitio}"
-            link_wapp = f"https://wa.me/?text={texto_wapp.replace(' ', '%20')}"
+            # ENLACE DIRECTO ÚNICO PARA ESTE ARTÍCULO
+            url_articulo = f"https://www.estudioleites.com.ar/?id={art_id}"
             
-            col_b1, col_b2 = st.columns([1, 3])
-            with col_b1:
-                st.markdown(f'''
-                    <a href="{link_wapp}" target="_blank" style="text-decoration: none;">
-                        <div style="background-color: #25D366; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; text-align: center; font-size: 0.85em;">
-                            💬 Compartir
+            st.markdown("#### 🔗 Compartir esta publicación:")
+            
+            # BOTONES DE COMPARTIR REDES Y ENLACE DIRECTO
+            texto_compartir = f"Leé este artículo del Dr. Cristian Leites: '{titulo}'. Ingresá acá: {url_articulo}"
+            
+            wapp_link = f"https://wa.me/?text={texto_compartir.replace(' ', '%20')}"
+            fb_link = f"https://www.facebook.com/sharer/sharer.php?u={url_articulo}"
+            lk_link = f"https://www.linkedin.com/sharing/share-offsite/?url={url_articulo}"
+            tw_link = f"https://twitter.com/intent/tweet?text={texto_compartir.replace(' ', '%20')}"
+            
+            st.markdown(f'''
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 25px;">
+                    <a href="{wapp_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: flex; align-items: center; gap: 5px;">
+                            💬 WhatsApp
                         </div>
                     </a>
-                ''', unsafe_allow_html=True)
+                    <a href="{fb_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #1877F2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            📘 Facebook
+                        </div>
+                    </a>
+                    <a href="{lk_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #0A66C2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            💼 LinkedIn
+                        </div>
+                    </a>
+                    <a href="{tw_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #000000; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            ✖️ X / Twitter
+                        </div>
+                    </a>
+                </div>
+            ''', unsafe_allow_html=True)
+            
+            # Caja con el link directo para copiar fácil
+            st.text_input(f"Enlace directo para historia de Instagram o copiar (Artículo #{art_id}):", value=url_articulo, key=f"link_input_{art_id}")
             
             st.divider()
 
@@ -474,7 +511,6 @@ else:
                             st.markdown("### 🚨 Directivas Urgentes")
                             st.info(analisis_ia)
                             
-                            # BOTÓN DE DESCARGA EN PDF
                             pdf_bytes = generar_pdf_informe(tema, analisis_ia, f"Medio: {plataforma}")
                             st.download_button(
                                 label="📥 Descargar Informe en PDF",
@@ -558,7 +594,6 @@ else:
                             st.markdown("### 🚨 Pautas Defensivas Urgentes")
                             st.info(analisis_ia)
                             
-                            # BOTÓN DE DESCARGA EN PDF
                             pdf_bytes = generar_pdf_informe(f"Defensa Penal - {tema}", analisis_ia, f"Situación: {estado_libertad}")
                             st.download_button(
                                 label="📥 Descargar Informe en PDF",
@@ -662,7 +697,6 @@ else:
                                     st.info(analisis_ia)
                                     st.metric(label="Estimación Indemnizatoria Orientativa", value=f"${estimacion_indemnizacion:,.2f}")
                                     
-                                    # BOTÓN DE DESCARGA EN PDF
                                     pdf_bytes = generar_pdf_informe(f"Derecho Laboral - {tipo_laboral}", analisis_ia, f"Estimado: ${estimacion_indemnizacion:,.2f}")
                                     st.download_button(
                                         label="📥 Descargar Informe en PDF",
@@ -731,7 +765,6 @@ else:
                                     st.markdown("### 🚨 Pautas Médicas y Legales Urgentes")
                                     st.info(analisis_ia)
                                     
-                                    # BOTÓN DE DESCARGA EN PDF
                                     pdf_bytes = generar_pdf_informe("Accidente de Trabajo / ART", analisis_ia, f"Estado ART: {tiene_art}")
                                     st.download_button(
                                         label="📥 Descargar Informe en PDF",
@@ -767,7 +800,6 @@ else:
                             analisis_texto = "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES: Es fundamental conservar recibos de sueldo, registrar testigos y realizar las intimaciones por telegrama laboral respaldado por asesoramiento letrado. El Dr. Leites se encuentra a disposición para coordinar una entrevista y evaluar su caso."
                             st.info(analisis_texto)
                             
-                            # BOTÓN DE DESCARGA EN PDF
                             pdf_bytes = generar_pdf_informe(f"Laboral - {tipo_laboral}", analisis_texto)
                             st.download_button(
                                 label="📥 Descargar Informe en PDF",
@@ -826,7 +858,6 @@ else:
                                     st.markdown("### 📋 Orientación Profesional")
                                     st.info(analisis_ia)
                                     
-                                    # BOTÓN DE DESCARGA EN PDF
                                     pdf_bytes = generar_pdf_informe(rama_derecho, analisis_ia, f"Detalle: {detalle_consulta[:40]}...")
                                     st.download_button(
                                         label="📥 Descargar Informe en PDF",
