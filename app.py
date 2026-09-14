@@ -7,7 +7,7 @@ import os
 import pandas as pd
 from fpdf import FPDF
 
-# 2. CONFIGURACIÓN DE PÁGINA (PRIMER ELEMENTO OBLIGATORIO)
+# 1. CONFIGURACIÓN DE PÁGINA (PRIMER ELEMENTO OBLIGATORIO)
 st.set_page_config(
     page_title="Leites & Asociados | Estudio Jurídico",
     page_icon="⚖️",
@@ -15,18 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# DETECCIÓN INICIAL DE ENLACES COMPARTIDOS (URL PARAMS) ANTES DE RENDERIZAR NADA
-query_params = st.query_params
-articulo_url_id = query_params.get("id", None)
-if articulo_url_id:
-    try:
-        articulo_url_id = int(articulo_url_id)
-        if 'vista_actual' not in st.session_state:
-            st.session_state['vista_actual'] = 'ARTICULOS'
-    except:
-        articulo_url_id = None
-
-# 1. FUNCIÓN PARA CARGAR IMÁGENES
+# 2. FUNCIÓN PARA CARGAR IMÁGENES
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
@@ -211,13 +200,11 @@ with st.sidebar:
     st.divider()
     
     if st.button("🏠 Inicio / Consulta Legal", use_container_width=True):
-        st.query_params.clear()
         st.session_state['vista_actual'] = 'INICIO'
         st.session_state['rol_seleccionado'] = None
         st.rerun()
         
     if st.button("📚 Biblioteca de Artículos", use_container_width=True):
-        st.query_params.clear()
         st.session_state['vista_actual'] = 'ARTICULOS'
         st.rerun()
 
@@ -268,7 +255,7 @@ if st.session_state.get('acceso_concedido', False):
             
     with tab_panel2:
         st.markdown("### Publicar Nuevo Artículo o Ensayo Jurídico")
-        st.markdown("Escriba o pegue su artículo completo. Se asignará un enlace directo único para compartir en redes.")
+        st.markdown("Escriba o pegue su artículo completo. Se incorporará automáticamente al selector de la biblioteca.")
         
         with st.form("form_nuevo_articulo"):
             titulo_art = st.text_input("Título de la Publicación:")
@@ -319,65 +306,60 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
     if not articulos:
         st.info("Aún no hay artículos publicados. Próximamente se compartirán análisis jurídicos y ponencias.")
     else:
-        # Si la URL trae un ID específico, filtramos para mostrar únicamente ese artículo
-        articulos_a_mostrar = articulos
-        if articulo_url_id:
-            articulos_a_mostrar = [a for a in articulos if a[0] == articulo_url_id]
-            if articulos_a_mostrar:
-                if st.button("⬅️ Ver todos los artículos"):
-                    st.query_params.clear()
-                    st.rerun()
-                st.divider()
+        # SELECTOR LIMPIO DE ARTÍCULOS
+        titulos_disponibles = [art[2] for art in articulos]
+        articulo_seleccionado = st.selectbox("📖 Seleccione el artículo que desea leer:", titulos_disponibles)
+        
+        st.divider()
 
-        for art_id, fecha, titulo, contenido, imagen_path in articulos_a_mostrar:
-            st.markdown(f"## {titulo}")
-            st.markdown(f"<span style='color: #aaaaaa; font-size: 0.85em;'>📅 Publicado el {fecha}</span>", unsafe_allow_html=True)
-            
-            if imagen_path and os.path.exists(imagen_path):
-                st.image(imagen_path, use_container_width=True)
+        # Buscar el artículo elegido
+        for art_id, fecha, titulo, contenido, imagen_path in articulos:
+            if titulo == articulo_seleccionado:
+                st.markdown(f"## {titulo}")
+                st.markdown(f"<span style='color: #aaaaaa; font-size: 0.85em;'>📅 Publicado el {fecha}</span>", unsafe_allow_html=True)
                 
-            st.markdown(f"<div style='background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; color: #eeeeee; line-height: 1.7; margin-top: 10px; margin-bottom: 20px;'>{contenido.replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
-            
-            # ENLACE DIRECTO ÚNICO PARA ESTE ARTÍCULO
-            url_articulo = f"https://www.estudioleites.com.ar/?id={art_id}"
-            
-            st.markdown("#### 🔗 Compartir esta publicación:")
-            
-            texto_compartir = f"Leé este artículo del Dr. Cristian Leites: '{titulo}'. Ingresá acá: {url_articulo}"
-            
-            wapp_link = f"https://wa.me/?text={texto_compartir.replace(' ', '%20')}"
-            fb_link = f"https://www.facebook.com/sharer/sharer.php?u={url_articulo}"
-            lk_link = f"https://www.linkedin.com/sharing/share-offsite/?url={url_articulo}"
-            tw_link = f"https://twitter.com/intent/tweet?text={texto_compartir.replace(' ', '%20')}"
-            
-            st.markdown(f'''
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 25px;">
-                    <a href="{wapp_link}" target="_blank" style="text-decoration: none;">
-                        <div style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: flex; align-items: center; gap: 5px;">
-                            💬 WhatsApp
-                        </div>
-                    </a>
-                    <a href="{fb_link}" target="_blank" style="text-decoration: none;">
-                        <div style="background-color: #1877F2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                            📘 Facebook
-                        </div>
-                    </a>
-                    <a href="{lk_link}" target="_blank" style="text-decoration: none;">
-                        <div style="background-color: #0A66C2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                            💼 LinkedIn
-                        </div>
-                    </a>
-                    <a href="{tw_link}" target="_blank" style="text-decoration: none;">
-                        <div style="background-color: #000000; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                            ✖️ X / Twitter
-                        </div>
-                    </a>
-                </div>
-            ''', unsafe_allow_html=True)
-            
-            st.text_input(f"Enlace directo para historia de Instagram o copiar (Artículo #{art_id}):", value=url_articulo, key=f"link_input_{art_id}")
-            
-            st.divider()
+                if imagen_path and os.path.exists(imagen_path):
+                    st.image(imagen_path, use_container_width=True)
+                    
+                st.markdown(f"<div style='background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; color: #eeeeee; line-height: 1.7; margin-top: 10px; margin-bottom: 20px;'>{contenido.replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
+                
+                # BOTONES DE COMPARTIR DIRECTOS Y LIMPIOS
+                url_sitio = "https://www.estudioleites.com.ar"
+                texto_compartir = f"Leé el artículo '{titulo}' del Dr. Cristian Leites en la Biblioteca Jurídica del estudio: {url_sitio}"
+                
+                wapp_link = f"https://wa.me/?text={texto_compartir.replace(' ', '%20')}"
+                fb_link = f"https://www.facebook.com/sharer/sharer.php?u={url_sitio}"
+                lk_link = f"https://www.linkedin.com/sharing/share-offsite/?url={url_sitio}"
+                tw_link = f"https://twitter.com/intent/tweet?text={texto_compartir.replace(' ', '%20')}"
+                
+                st.markdown("#### 🔗 Compartir esta publicación en redes:")
+                st.markdown(f'''
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 25px;">
+                        <a href="{wapp_link}" target="_blank" style="text-decoration: none;">
+                            <div style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: flex; align-items: center; gap: 5px;">
+                                💬 WhatsApp
+                            </div>
+                        </a>
+                        <a href="{fb_link}" target="_blank" style="text-decoration: none;">
+                            <div style="background-color: #1877F2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                                📘 Facebook
+                            </div>
+                        </a>
+                        <a href="{lk_link}" target="_blank" style="text-decoration: none;">
+                            <div style="background-color: #0A66C2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                                💼 LinkedIn
+                            </div>
+                        </a>
+                        <a href="{tw_link}" target="_blank" style="text-decoration: none;">
+                            <div style="background-color: #000000; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                                ✖️ X / Twitter
+                            </div>
+                        </a>
+                    </div>
+                ''', unsafe_allow_html=True)
+                
+                st.text_input("Enlace principal del portal para compartir en historias o estados:", value=url_sitio, key=f"link_input_{art_id}")
+                break
 
 else:
     st.markdown("""
