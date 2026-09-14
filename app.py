@@ -191,9 +191,9 @@ with st.sidebar:
         st.session_state['rol_seleccionado'] = None
         st.rerun()
         
-    # Enlace directo a la sección de artículos estáticos
+    # Enlace absoluto directo a la biblioteca con apertura en nueva pestaña
     st.markdown('''
-        <a href="/articulos/defensa-penal-urgente.html" target="_self" style="text-decoration: none;">
+        <a href="https://www.estudioleites.com.ar/articulos/defensa-penal-urgente.html" target="_blank" style="text-decoration: none;">
             <div style="background-color: rgba(255, 255, 255, 0.1); color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.2);">
                 📚 Biblioteca de Artículos
             </div>
@@ -609,7 +609,7 @@ else:
                                     api_key_secreta = st.secrets["OPENAI_API_KEY"]
                                     client = openai.OpenAI(api_key=api_key_secreta)
                                     
-                                    prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites en Posadas, Misiones, experto en accidentes de trabajo y Ley de Riesgos (ART)."
+                                    prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites in Posadas, Misiones, experto en accidentes de trabajo y Ley de Riesgos (ART)."
                                     prompt_usuario = f"""
                                     Analiza este accidente laboral:
                                     - Estado ART: {tiene_art}
