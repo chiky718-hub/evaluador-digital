@@ -148,11 +148,6 @@ if 'rol_seleccionado' not in st.session_state:
 if 'vista_actual' not in st.session_state:
     st.session_state['vista_actual'] = 'INICIO'
 
-# DETECCIÓN DE PARÁMETROS EN LA URL
-query_params = st.query_params
-if "articulo" in query_params:
-    st.session_state['vista_actual'] = 'ARTICULOS'
-
 # 5. BARRA LATERAL (SIDEBAR)
 with st.sidebar:
     logo_path = None
@@ -205,13 +200,11 @@ with st.sidebar:
     st.divider()
     
     if st.button("🏠 Inicio / Consulta Legal", use_container_width=True):
-        st.query_params.clear()
         st.session_state['vista_actual'] = 'INICIO'
         st.session_state['rol_seleccionado'] = None
         st.rerun()
         
     if st.button("📚 Biblioteca de Artículos", use_container_width=True):
-        st.query_params.clear()
         st.session_state['vista_actual'] = 'ARTICULOS'
         st.rerun()
 
@@ -262,7 +255,7 @@ if st.session_state.get('acceso_concedido', False):
             
     with tab_panel2:
         st.markdown("### Publicar Nuevo Artículo o Ensayo Jurídico")
-        st.markdown("Escriba o pegue su artículo completo. Se generará automáticamente un enlace directo para compartir.")
+        st.markdown("Escriba o pegue su artículo completo. Se sumará automáticamente al muro público del estudio.")
         
         with st.form("form_nuevo_articulo"):
             titulo_art = st.text_input("Título de la Publicación:")
@@ -313,80 +306,53 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
     if not articulos:
         st.info("Aún no hay artículos publicados. Próximamente se compartirán análisis jurídicos y ponencias.")
     else:
-        # Verificar si la URL trae un artículo específico abierto
-        articulo_activo_id = query_params.get("articulo", None)
-        
-        # Selector de artículos
-        titulos_disponibles = [art[2] for art in articulos]
-        ids_disponibles = [art[0] for art in articulos]
-        
-        indice_default = 0
-        if articulo_activo_id:
-            try:
-                articulo_activo_id = int(articulo_activo_id)
-                if articulo_activo_id in ids_disponibles:
-                    indice_default = ids_disponibles.index(articulo_activo_id)
-            except:
-                pass
-
-        articulo_seleccionado = st.selectbox("📖 Seleccione el artículo que desea leer:", titulos_disponibles, index=indice_default)
-        
-        st.divider()
-
+        # SE MUESTRAN TODOS LOS ARTÍCULOS EN ORDEN CRONOLÓGICO (TIPO BLOG / MURO)
         for art_id, fecha, titulo, contenido, imagen_path in articulos:
-            if titulo == articulo_seleccionado:
-                # Actualizar parámetro en la URL de forma nativa
-                st.query_params["articulo"] = str(art_id)
+            st.markdown(f"## {titulo}")
+            st.markdown(f"<span style='color: #aaaaaa; font-size: 0.85em;'>📅 Publicado el {fecha}</span>", unsafe_allow_html=True)
+            
+            if imagen_path and os.path.exists(imagen_path):
+                st.image(imagen_path, use_container_width=True)
                 
-                st.markdown(f"## {titulo}")
-                st.markdown(f"<span style='color: #aaaaaa; font-size: 0.85em;'>📅 Publicado el {fecha}</span>", unsafe_allow_html=True)
-                
-                if imagen_path and os.path.exists(imagen_path):
-                    st.image(imagen_path, use_container_width=True)
-                    
-                st.markdown(f"<div style='background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; color: #eeeeee; line-height: 1.7; margin-top: 10px; margin-bottom: 20px;'>{contenido.replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
-                
-                # ENLACE DIRECTO ÚNICO PARA ESTE ARTÍCULO
-                url_articulo_especifico = f"https://www.estudioleites.com.ar/?articulo={art_id}"
-                
-                st.markdown("#### 🔗 Compartir esta publicación:")
-                
-                texto_compartir = f"Leé el artículo jurídico '{titulo}' del Dr. Cristian Leites: {url_articulo_especifico}"
-                
-                wapp_link = f"https://wa.me/?text={texto_compartir.replace(' ', '%20')}"
-                fb_link = f"https://www.facebook.com/sharer/sharer.php?u={url_articulo_especifico}"
-                lk_link = f"https://www.linkedin.com/sharing/share-offsite/?url={url_articulo_especifico}"
-                tw_link = f"https://twitter.com/intent/tweet?text={texto_compartir.replace(' ', '%20')}"
-                
-                st.markdown(f'''
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
-                        <a href="{wapp_link}" target="_blank" style="text-decoration: none;">
-                            <div style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: flex; align-items: center; gap: 5px;">
-                                💬 WhatsApp
-                            </div>
-                        </a>
-                        <a href="{fb_link}" target="_blank" style="text-decoration: none;">
-                            <div style="background-color: #1877F2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                                📘 Facebook
-                            </div>
-                        </a>
-                        <a href="{lk_link}" target="_blank" style="text-decoration: none;">
-                            <div style="background-color: #0A66C2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                                💼 LinkedIn
-                            </div>
-                        </a>
-                        <a href="{tw_link}" target="_blank" style="text-decoration: none;">
-                            <div style="background-color: #000000; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                                ✖️ X / Twitter
-                            </div>
-                        </a>
-                    </div>
-                ''', unsafe_allow_html=True)
-                
-                # Botón nativo de Streamlit para copiar al portapapeles
-                st.code(url_articulo_especifico, language="text")
-                st.caption("👆 Hacé clic en el ícono superior derecho del recuadro para copiar el enlace directo al portapapeles y pegarlo en tus redes, estados o historias.")
-                break
+            st.markdown(f"<div style='background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; color: #eeeeee; line-height: 1.7; margin-top: 10px; margin-bottom: 20px;'>{contenido.replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
+            
+            # ENLACE DE LA BIBLIOTECA PARA COMPARTIR
+            url_biblioteca = "https://www.estudioleites.com.ar"
+            
+            texto_compartir = f"Leé el artículo jurídico '{titulo}' del Dr. Cristian Leites en la Biblioteca del estudio: {url_biblioteca}"
+            
+            wapp_link = f"https://wa.me/?text={texto_compartir.replace(' ', '%20')}"
+            fb_link = f"https://www.facebook.com/sharer/sharer.php?u={url_biblioteca}"
+            lk_link = f"https://www.linkedin.com/sharing/share-offsite/?url={url_biblioteca}"
+            tw_link = f"https://twitter.com/intent/tweet?text={texto_compartir.replace(' ', '%20')}"
+            
+            st.markdown("#### 🔗 Compartir esta publicación:")
+            st.markdown(f'''
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+                    <a href="{wapp_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: flex; align-items: center; gap: 5px;">
+                            💬 WhatsApp
+                        </div>
+                    </a>
+                    <a href="{fb_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #1877F2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            📘 Facebook
+                        </div>
+                    </a>
+                    <a href="{lk_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #0A66C2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            💼 LinkedIn
+                        </div>
+                    </a>
+                    <a href="{tw_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #000000; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            ✖️ X / Twitter
+                        </div>
+                    </a>
+                </div>
+            ''', unsafe_allow_html=True)
+            
+            st.divider()
 
 else:
     st.markdown("""
@@ -460,7 +426,6 @@ else:
 
     else:
         if st.button("⬅️ Volver al menú principal"):
-            st.query_params.clear()
             st.session_state['rol_seleccionado'] = None
             st.rerun()
 
@@ -879,7 +844,7 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una formContext."
+                                    mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
                                     enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
