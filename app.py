@@ -107,6 +107,10 @@ def init_db():
         CREATE TABLE IF NOT EXISTS triage 
         (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, rol TEXT, tema TEXT, detalle TEXT, nivel_riesgo TEXT)
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS articulos 
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, titulo TEXT, contenido TEXT, imagen_path TEXT)
+    ''')
     try:
         c.execute("ALTER TABLE triage ADD COLUMN rol TEXT")
     except:
@@ -124,6 +128,15 @@ def guardar_consulta(rol, tema, detalle, nivel_riesgo):
     fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     c.execute("INSERT INTO triage (fecha, rol, tema, detalle, nivel_riesgo) VALUES (?, ?, ?, ?, ?)", 
               (fecha_actual, rol, tema, detalle, nivel_riesgo))
+    conn.commit()
+    conn.close()
+
+def guardar_articulo(titulo, contenido, imagen_path=""):
+    conn = sqlite3.connect('consultas_legales_v2.db')
+    c = conn.cursor()
+    fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M")
+    c.execute("INSERT INTO articulos (fecha, titulo, contenido, imagen_path) VALUES (?, ?, ?, ?)", 
+              (fecha_actual, titulo, contenido, imagen_path))
     conn.commit()
     conn.close()
 
@@ -191,14 +204,9 @@ with st.sidebar:
         st.session_state['rol_seleccionado'] = None
         st.rerun()
         
-    # Enlace absoluto directo a la biblioteca con apertura en nueva pestaña
-    st.markdown('''
-        <a href="https://www.estudioleites.com.ar/articulos/defensa-penal-urgente.html" target="_blank" style="text-decoration: none;">
-            <div style="background-color: rgba(255, 255, 255, 0.1); color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.2);">
-                📚 Biblioteca de Artículos
-            </div>
-        </a>
-    ''', unsafe_allow_html=True)
+    if st.button("📚 Biblioteca de Artículos", use_container_width=True):
+        st.session_state['vista_actual'] = 'ARTICULOS'
+        st.rerun()
 
     st.divider()
     st.title("🛡️ Confidencialidad")
@@ -223,29 +231,125 @@ if st.session_state.get('acceso_concedido', False):
         <div class="titulo-panel">⚙️ Panel de Gestión del Estudio</div>
     """, unsafe_allow_html=True)
     
-    st.markdown("### Registro interno de consultas y perfiles de ingresos")
-    conn = sqlite3.connect('consultas_legales_v2.db')
-    df = pd.read_sql_query("SELECT id as ID, fecha as Fecha, rol as Categoria_Area, tema as Asunto, detalle as Detalle_Estado, nivel_riesgo as IA_Status FROM triage ORDER BY id DESC", conn)
-    conn.close()
+    tab_panel1, tab_panel2 = st.tabs(["📊 Consultas Registradas", "✍️ Redactar y Publicar Artículo"])
     
-    st.dataframe(df, use_container_width=True)
-    
-    if not df.empty:
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Descargar Base de Datos Completa (CSV)",
-            data=csv,
-            file_name=f"estadisticas_estudio_leites_{datetime.now().strftime('%Y%m%d')}.csv",
-            mime="text/csv",
-            type="primary"
-        )
-    else:
-        st.info("Aún no hay consultas registradas.")
+    with tab_panel1:
+        st.markdown("### Registro interno de consultas y perfiles de ingresos")
+        conn = sqlite3.connect('consultas_legales_v2.db')
+        df = pd.read_sql_query("SELECT id as ID, fecha as Fecha, rol as Categoria_Area, tema as Asunto, detalle as Detalle_Estado, nivel_riesgo as IA_Status FROM triage ORDER BY id DESC", conn)
+        conn.close()
+        
+        st.dataframe(df, use_container_width=True)
+        
+        if not df.empty:
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Descargar Base de Datos Completa (CSV)",
+                data=csv,
+                file_name=f"estadisticas_estudio_leites_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv",
+                type="primary"
+            )
+        else:
+            st.info("Aún no hay consultas registradas.")
+            
+    with tab_panel2:
+        st.markdown("### Publicar Nuevo Artículo o Ensayo Jurídico")
+        st.markdown("Escriba o pegue su artículo completo. Se publicará de forma instantánea en la Biblioteca de la web.")
+        
+        with st.form("form_nuevo_articulo"):
+            titulo_art = st.text_input("Título de la Publicación:")
+            contenido_art = st.text_area("Contenido del Artículo (Texto completo / Ensayo):", height=350, placeholder="Escriba o pegue aquí su artículo...")
+            imagen_subida = st.file_uploader("Imagen de Portada (Opcional):", type=["jpg", "jpeg", "png"])
+            
+            submit_art = st.form_submit_button("🚀 Publicar Artículo", type="primary")
+            
+            if submit_art:
+                if not titulo_art.strip() or not contenido_art.strip():
+                    st.warning("⚠️ El título y el contenido son obligatorios.")
+                else:
+                    ruta_img_guardada = ""
+                    if imagen_subida is not None:
+                        os.makedirs("imagenes_articulos", exist_ok=True)
+                        ruta_img_guardada = os.path.join("imagenes_articulos", imagen_subida.name)
+                        with open(ruta_img_guardada, "wb") as f:
+                            f.write(imagen_subida.getbuffer())
+                    
+                    guardar_articulo(titulo_art, contenido_art, ruta_img_guardada)
+                    st.success("¡Artículo publicado con éxito en la web!")
+                    st.balloons()
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Cerrar Sesión Interna"):
         st.session_state['acceso_concedido'] = False
         st.rerun()
+
+elif st.session_state['vista_actual'] == 'ARTICULOS':
+    st.markdown("""
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
+        .titulo-estudio { font-family: 'Lora', serif; font-size: 2.8rem; font-weight: 500; color: #ffffff; margin-bottom: 0.2em; line-height: 1.2; }
+        .subtitulo-rol { font-size: 1.1rem; color: #dddddd; margin-bottom: 1.5rem; }
+        </style>
+        <div class="titulo-estudio">Biblioteca Jurídica</div>
+        <div class="subtitulo-rol">Artículos, ensayos y publicaciones de doctrina y práctica legal del Dr. Cristian Dario Leites.</div>
+    """, unsafe_allow_html=True)
+    
+    st.divider()
+    
+    conn = sqlite3.connect('consultas_legales_v2.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, fecha, titulo, contenido, imagen_path FROM articulos ORDER BY id DESC")
+    articulos = cursor.fetchall()
+    conn.close()
+
+    if not articulos:
+        st.info("Aún no hay artículos publicados. Próximamente se compartirán análisis jurídicos y ponencias.")
+    else:
+        for art_id, fecha, titulo, contenido, imagen_path in articulos:
+            st.markdown(f"## {titulo}")
+            st.markdown(f"<span style='color: #aaaaaa; font-size: 0.85em;'>📅 Publicado el {fecha}</span>", unsafe_allow_html=True)
+            
+            if imagen_path and os.path.exists(imagen_path):
+                st.image(imagen_path, use_container_width=True)
+                
+            st.markdown(f"<div style='background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; color: #eeeeee; line-height: 1.7; margin-top: 10px; margin-bottom: 20px;'>{contenido.replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
+            
+            url_sitio = "https://www.estudioleites.com.ar"
+            texto_compartir = f"Leé el artículo jurídico '{titulo}' del Dr. Cristian Leites en el portal del estudio: {url_sitio}"
+            
+            wapp_link = f"https://wa.me/?text={texto_compartir.replace(' ', '%20')}"
+            fb_link = f"https://www.facebook.com/sharer/sharer.php?u={url_sitio}"
+            lk_link = f"https://www.linkedin.com/sharing/share-offsite/?url={url_sitio}"
+            tw_link = f"https://twitter.com/intent/tweet?text={texto_compartir.replace(' ', '%20')}"
+            
+            st.markdown("#### 🔗 Compartir esta publicación:")
+            st.markdown(f'''
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 25px;">
+                    <a href="{wapp_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: flex; align-items: center; gap: 5px;">
+                            💬 WhatsApp
+                        </div>
+                    </a>
+                    <a href="{fb_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #1877F2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            📘 Facebook
+                        </div>
+                    </a>
+                    <a href="{lk_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #0A66C2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            💼 LinkedIn
+                        </div>
+                    </a>
+                    <a href="{tw_link}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #000000; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
+                            ✖️ X / Twitter
+                        </div>
+                    </a>
+                </div>
+            ''', unsafe_allow_html=True)
+            
+            st.divider()
 
 else:
     st.markdown("""
@@ -609,7 +713,7 @@ else:
                                     api_key_secreta = st.secrets["OPENAI_API_KEY"]
                                     client = openai.OpenAI(api_key=api_key_secreta)
                                     
-                                    prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites in Posadas, Misiones, experto en accidentes de trabajo y Ley de Riesgos (ART)."
+                                    prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites en Posadas, Misiones, experto en accidentes de trabajo y Ley de Riesgos (ART)."
                                     prompt_usuario = f"""
                                     Analiza este accidente laboral:
                                     - Estado ART: {tiene_art}
@@ -617,7 +721,7 @@ else:
                                     
                                     REGLAS ESTRICTAS:
                                     1. Inicia exactamente con: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
-                                    2. Redacta 3 oraciones indicando las medidas urgentes (atención médica obligatoria, denuncia a la ART o intimación al empleador, y preservación de constancias).
+                                    2. Redacta solo 3 oraciones indicando las medidas urgentes (atención médica obligatoria, denuncia a la ART o intimación al empleador, y preservación de constancias).
                                     3. Termina exactamente con: "El Dr. Leites se encuentra a disposición para iniciar los reclamos ante comisiones médicas o tribunales."
                                     """
                                     
