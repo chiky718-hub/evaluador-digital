@@ -145,7 +145,6 @@ def guardar_articulo(titulo, contenido, imagen_path=""):
     conn.commit()
     conn.close()
     
-    # Crear carpeta articulos si no existe y generar el archivo HTML aislado
     os.makedirs("articulos", exist_ok=True)
     nombre_archivo = f"articulos/{slug}.html"
     
@@ -299,7 +298,7 @@ if st.session_state.get('acceso_concedido', False):
             
     with tab_panel2:
         st.markdown("### Publicar Nuevo Artículo o Ensayo Jurídico")
-        st.markdown("Escriba o pegue su artículo completo. Se generará de forma automática su página web independiente y enlace autónomo.")
+        st.markdown("Escriba o pegue su artículo completo. Se generará de forma automática su página web independiente.")
         
         with st.form("form_nuevo_articulo"):
             titulo_art = st.text_input("Título de la Publicación:")
@@ -351,23 +350,17 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
         st.info("Aún no hay artículos publicados. Próximamente se compartirán análisis jurídicos y ponencias.")
     else:
         st.markdown("### 📰 Publicaciones Disponibles")
-        st.markdown("Hacé clic en cualquier título para abrir el artículo completo en una pestaña nueva con su enlace autónomo.")
+        st.markdown("Hacé clic en cualquier título para abrir el artículo completo en una pestaña nueva.")
         
         for art_id, fecha, titulo, slug in articulos:
             if not slug:
                 slug = slugify(titulo)
             
+            # URL absoluta directa al archivo HTML estático creado en GitHub/Streamlit
             url_articulo = f"https://www.estudioleites.com.ar/articulos/{slug}.html"
             
-            # Título como enlace directo clickeable que abre en pestaña nueva
-            st.markdown(f'''
-                <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <span style="color: #aaaaaa; font-size: 0.85em; display: block; margin-bottom: 4px;">📅 {fecha}</span>
-                    <a href="{url_articulo}" target="_blank" style="font-family: 'Lora', serif; font-size: 1.4rem; color: #ffffff; text-decoration: none; font-weight: bold;">
-                        {titulo} ↗
-                    </a>
-                </div>
-            ''', unsafe_allow_html=True)
+            # Usando st.link_button para garantizar apertura nativa en pestaña nueva sin interferencias
+            st.link_button(f"📖 {titulo} ({fecha})", url_articulo, use_container_width=True)
 
 else:
     st.markdown("""
@@ -670,7 +663,7 @@ else:
                                     
                                     REGLAS ESTRICTAS:
                                     1. Inicia exactamente con: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
-                                    2. Redacta 3 oraciones indicando que la cifra es meramente estimativa, la importancia de intimar por telegrama de ley y los plazos legales vigentes.
+                                    2. Redacta solo 3 oraciones indicando que la cifra es meramente estimativa, la importancia de intimar por telegrama de ley y los plazos legales vigentes.
                                     3. Termina exactamente con: "El Dr. Leites se encuentra a disposición para auditar su liquidación y coordinar el reclamo formal."
                                     """
                                     
