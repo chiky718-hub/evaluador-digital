@@ -6,6 +6,7 @@ import base64
 import os
 import pandas as pd
 from fpdf import FPDF
+import re
 
 # 1. CONFIGURACIÓN DE PÁGINA (PRIMER ELEMENTO OBLIGATORIO)
 st.set_page_config(
@@ -99,7 +100,7 @@ if fondo_path:
     except Exception:
         pass
 
-# 4. BASE DE DATOS
+# 4. BASE DE DATOS Y GENERACIÓN DE HTML ESTÁTICO
 def init_db():
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
@@ -109,18 +110,20 @@ def init_db():
     ''')
     c.execute('''
         CREATE TABLE IF NOT EXISTS articulos 
-        (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, titulo TEXT, contenido TEXT, imagen_path TEXT)
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT, titulo TEXT, contenido TEXT, imagen_path TEXT, slug TEXT)
     ''')
     try:
-        c.execute("ALTER TABLE triage ADD COLUMN rol TEXT")
-    except:
-        pass
-    try:
-        c.execute("ALTER TABLE triage ADD COLUMN detalle TEXT")
+        c.execute("ALTER TABLE articulos ADD COLUMN slug TEXT")
     except:
         pass
     conn.commit()
     conn.close()
+
+def slugify(text):
+    text = text.lower()
+    text = re.sub(r'[^a-z0-9\s-]', '', text)
+    text = re.sub(r'[\s+_-]+', '-', text).strip('-')
+    return text
 
 def guardar_consulta(rol, tema, detalle, nivel_riesgo):
     conn = sqlite3.connect('consultas_legales_v2.db')
@@ -135,10 +138,51 @@ def guardar_articulo(titulo, contenido, imagen_path=""):
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
     fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M")
-    c.execute("INSERT INTO articulos (fecha, titulo, contenido, imagen_path) VALUES (?, ?, ?, ?)", 
-              (fecha_actual, titulo, contenido, imagen_path))
+    slug = slugify(titulo)
+    
+    c.execute("INSERT INTO articulos (fecha, titulo, contenido, imagen_path, slug) VALUES (?, ?, ?, ?, ?)", 
+              (fecha_actual, titulo, contenido, imagen_path, slug))
     conn.commit()
     conn.close()
+    
+    # Crear carpeta articulos si no existe y generar el archivo HTML aislado
+    os.makedirs("articulos", exist_ok=True)
+    nombre_archivo = f"articulos/{slug}.html"
+    
+    img_html = f'<img src="../{imagen_path}" style="width:100%; border-radius:8px; margin-bottom:20px;">' if imagen_path else ''
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{titulo} | Estudio Leites</title>
+    <meta property="og:title" content="{titulo}">
+    <meta property="og:description" content="Artículo de doctrina y práctica legal del Dr. Cristian Dario Leites.">
+    <meta property="og:url" content="https://www.estudioleites.com.ar/articulos/{slug}.html">
+    <style>
+        body {{ font-family: 'Lora', Georgia, serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; line-height: 1.8; }}
+        .container {{ max-width: 800px; margin: 40px auto; background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }}
+        h1 {{ color: #ffffff; font-size: 2.2rem; margin-bottom: 10px; }}
+        .fecha {{ color: #aaaaaa; font-size: 0.9rem; margin-bottom: 25px; display: block; }}
+        .contenido {{ font-size: 1.1rem; margin-bottom: 40px; white-space: pre-wrap; }}
+        .btn-volver {{ display: inline-block; background-color: #25D366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: sans-serif; }}
+        .btn-volver:hover {{ background-color: #1ebe57; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="fecha">📅 Publicado el {fecha_actual} | Dr. Cristian Dario Leites (M.P. 4925)</span>
+        <h1>{titulo}</h1>
+        {img_html}
+        <div class="contenido">{contenido}</div>
+        <a href="https://www.estudioleites.com.ar" class="btn-volver">🏠 Volver al sitio principal del Estudio</a>
+    </div>
+</body>
+</html>
+"""
+    with open(nombre_archivo, "w", encoding="utf-8") as f:
+        f.write(html_content)
 
 init_db()
 
@@ -147,17 +191,6 @@ if 'rol_seleccionado' not in st.session_state:
 
 if 'vista_actual' not in st.session_state:
     st.session_state['vista_actual'] = 'INICIO'
-
-# GESTIÓN DE PARÁMETROS URL PARA ENLACES AUTÓNOMOS
-query_params = st.query_params
-articulo_id_url = query_params.get("id", None)
-if articulo_id_url:
-    try:
-        articulo_id_url = int(articulo_id_url)
-        st.session_state['vista_actual'] = 'ARTICULOS'
-        st.session_state['articulo_activo'] = articulo_id_url
-    except:
-        pass
 
 # 5. BARRA LATERAL (SIDEBAR)
 with st.sidebar:
@@ -211,16 +244,12 @@ with st.sidebar:
     st.divider()
     
     if st.button("🏠 Inicio / Consulta Legal", use_container_width=True):
-        st.query_params.clear()
         st.session_state['vista_actual'] = 'INICIO'
         st.session_state['rol_seleccionado'] = None
-        st.session_state.pop('articulo_activo', None)
         st.rerun()
         
     if st.button("📚 Biblioteca de Artículos", use_container_width=True):
-        st.query_params.clear()
         st.session_state['vista_actual'] = 'ARTICULOS'
-        st.session_state.pop('articulo_activo', None)
         st.rerun()
 
     st.divider()
@@ -270,7 +299,7 @@ if st.session_state.get('acceso_concedido', False):
             
     with tab_panel2:
         st.markdown("### Publicar Nuevo Artículo o Ensayo Jurídico")
-        st.markdown("Escriba o pegue su artículo completo. Se generará automáticamente un enlace autónomo.")
+        st.markdown("Escriba o pegue su artículo completo. Se generará de forma automática su página web independiente y enlace autónomo.")
         
         with st.form("form_nuevo_articulo"):
             titulo_art = st.text_input("Título de la Publicación:")
@@ -291,7 +320,7 @@ if st.session_state.get('acceso_concedido', False):
                             f.write(imagen_subida.getbuffer())
                     
                     guardar_articulo(titulo_art, contenido_art, ruta_img_guardada)
-                    st.success("¡Artículo publicado con éxito en la web!")
+                    st.success("¡Artículo publicado con éxito! Se creó su página independiente en la web.")
                     st.balloons()
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -314,93 +343,31 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
     
     conn = sqlite3.connect('consultas_legales_v2.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, fecha, titulo, contenido, imagen_path FROM articulos ORDER BY id DESC")
+    cursor.execute("SELECT id, fecha, titulo, slug FROM articulos ORDER BY id DESC")
     articulos = cursor.fetchall()
     conn.close()
 
     if not articulos:
         st.info("Aún no hay artículos publicados. Próximamente se compartirán análisis jurídicos y ponencias.")
     else:
-        # Verificar si hay un artículo activo seleccionado para lectura individual
-        articulo_activo = st.session_state.get('articulo_activo', None)
+        st.markdown("### 📰 Publicaciones Disponibles")
+        st.markdown("Hacé clic en cualquier título para abrir el artículo completo en una pestaña nueva con su enlace autónomo.")
         
-        if articulo_activo:
-            # Mostrar solo el artículo seleccionado en detalle
-            art_encontrado = [a for a in articulos if a[0] == articulo_activo]
-            if art_encontrado:
-                art_id, fecha, titulo, contenido, imagen_path = art_encontrado[0]
-                
-                if st.button("⬅️ Volver al listado de la Biblioteca"):
-                    st.query_params.clear()
-                    st.session_state.pop('articulo_activo', None)
-                    st.rerun()
-                
-                st.markdown(f"## {titulo}")
-                st.markdown(f"<span style='color: #aaaaaa; font-size: 0.85em;'>📅 Publicado el {fecha}</span>", unsafe_allow_html=True)
-                
-                if imagen_path and os.path.exists(imagen_path):
-                    st.image(imagen_path, use_container_width=True)
-                    
-                st.markdown(f"<div style='background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; color: #eeeeee; line-height: 1.7; margin-top: 10px; margin-bottom: 20px;'>{contenido.replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
-                
-                # ENLACE AUTÓNOMO DIRECTO PARA ESTE ARTÍCULO
-                url_autonoma = f"https://www.estudioleites.com.ar/?id={art_id}"
-                st.query_params["id"] = str(art_id)
-                
-                texto_compartir = f"Leé este artículo del Dr. Cristian Leites: '{titulo}'. Ingresá acá: {url_autonoma}"
-                
-                wapp_link = f"https://wa.me/?text={texto_compartir.replace(' ', '%20')}"
-                fb_link = f"https://www.facebook.com/sharer/sharer.php?u={url_autonoma}"
-                lk_link = f"https://www.linkedin.com/sharing/share-offsite/?url={url_autonoma}"
-                tw_link = f"https://twitter.com/intent/tweet?text={texto_compartir.replace(' ', '%20')}"
-                
-                st.markdown("#### 🔗 Compartir este artículo directamente:")
-                st.markdown(f'''
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
-                        <a href="{wapp_link}" target="_blank" style="text-decoration: none;">
-                            <div style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: flex; align-items: center; gap: 5px;">
-                                💬 WhatsApp
-                            </div>
-                        </a>
-                        <a href="{fb_link}" target="_blank" style="text-decoration: none;">
-                            <div style="background-color: #1877F2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                                📘 Facebook
-                            </div>
-                        </a>
-                        <a href="{lk_link}" target="_blank" style="text-decoration: none;">
-                            <div style="background-color: #0A66C2; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                                💼 LinkedIn
-                            </div>
-                        </a>
-                        <a href="{tw_link}" target="_blank" style="text-decoration: none;">
-                            <div style="background-color: #000000; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em;">
-                                ✖️ X / Twitter
-                            </div>
-                        </a>
-                    </div>
-                ''', unsafe_allow_html=True)
-                
-                st.text_input("Enlace autónomo para copiar y pegar (historias, estados o mensajes):", value=url_autonoma)
-        else:
-            # Listado en forma de blog (títulos con opción de lectura)
-            st.markdown("### 📰 Últimas Publicaciones")
-            for art_id, fecha, titulo, contenido, imagen_path in articulos:
-                with st.container():
-                    st.markdown(f"### {titulo}")
-                    st.markdown(f"<span style='color: #aaaaaa; font-size: 0.85em;'>📅 {fecha}</span>", unsafe_allow_html=True)
-                    
-                    # Mostrar un pequeño resumen o extracto del texto
-                    extracto = contenido[:250] + "..." if len(contenido) > 250 else contenido
-                    st.markdown(f"<p style='color: #cccccc;'>{extracto}</p>", unsafe_allow_html=True)
-                    
-                    col_b1, col_b2 = st.columns([1, 3])
-                    with col_b1:
-                        if st.button("📖 Leer completo", key=f"btn_leer_{art_id}"):
-                            st.session_state['articulo_activo'] = art_id
-                            st.query_params["id"] = str(art_id)
-                            st.rerun()
-                    
-                    st.divider()
+        for art_id, fecha, titulo, slug in articulos:
+            if not slug:
+                slug = slugify(titulo)
+            
+            url_articulo = f"https://www.estudioleites.com.ar/articulos/{slug}.html"
+            
+            # Título como enlace directo clickeable que abre en pestaña nueva
+            st.markdown(f'''
+                <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <span style="color: #aaaaaa; font-size: 0.85em; display: block; margin-bottom: 4px;">📅 {fecha}</span>
+                    <a href="{url_articulo}" target="_blank" style="font-family: 'Lora', serif; font-size: 1.4rem; color: #ffffff; text-decoration: none; font-weight: bold;">
+                        {titulo} ↗
+                    </a>
+                </div>
+            ''', unsafe_allow_html=True)
 
 else:
     st.markdown("""
@@ -857,7 +824,7 @@ else:
                                     api_key_secreta = st.secrets["OPENAI_API_KEY"]
                                     client = openai.OpenAI(api_key=api_key_secreta)
                                     
-                                    prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites, abogado en Posadas, Misiones. Asesoras en ramas civiles y de familia. Ton tu tono es profesional, claro y prudente."
+                                    prompt_sistema = "Eres el asistente legal del Dr. Cristian Leites, abogado en Posadas, Misiones. Asesoras en ramas civiles y de familia. Tu tono es profesional, claro y prudente."
                                     prompt_usuario = f"""
                                     Analiza este caso extrapenal:
                                     - Área: {rama_derecho}
