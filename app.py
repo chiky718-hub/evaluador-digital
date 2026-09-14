@@ -7,6 +7,25 @@ import os
 import pandas as pd
 from fpdf import FPDF
 
+# 2. CONFIGURACIÓN DE PÁGINA (PRIMER ELEMENTO OBLIGATORIO)
+st.set_page_config(
+    page_title="Leites & Asociados | Estudio Jurídico",
+    page_icon="⚖️",
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
+
+# DETECCIÓN INICIAL DE ENLACES COMPARTIDOS (URL PARAMS) ANTES DE RENDERIZAR NADA
+query_params = st.query_params
+articulo_url_id = query_params.get("id", None)
+if articulo_url_id:
+    try:
+        articulo_url_id = int(articulo_url_id)
+        if 'vista_actual' not in st.session_state:
+            st.session_state['vista_actual'] = 'ARTICULOS'
+    except:
+        articulo_url_id = None
+
 # 1. FUNCIÓN PARA CARGAR IMÁGENES
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
@@ -64,14 +83,6 @@ def generar_pdf_informe(titulo_caso, detalle_analisis, datos_extra=""):
     pdf.multi_cell(0, 5, "Aviso: Este informe preliminar se encuentra amparado por el secreto profesional y constituye una orientación técnica inicial basada en los datos proporcionados por el consultante.")
     
     return bytes(pdf.output())
-
-# 2. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(
-    page_title="Leites & Asociados | Estudio Jurídico",
-    page_icon="⚖️",
-    layout="centered",
-    initial_sidebar_state="expanded"
-)
 
 # 3. APLICAR FONDO CON FILTRO OSCURO
 fondo_path = None
@@ -200,11 +211,13 @@ with st.sidebar:
     st.divider()
     
     if st.button("🏠 Inicio / Consulta Legal", use_container_width=True):
+        st.query_params.clear()
         st.session_state['vista_actual'] = 'INICIO'
         st.session_state['rol_seleccionado'] = None
         st.rerun()
         
     if st.button("📚 Biblioteca de Artículos", use_container_width=True):
+        st.query_params.clear()
         st.session_state['vista_actual'] = 'ARTICULOS'
         st.rerun()
 
@@ -302,24 +315,14 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
     cursor.execute("SELECT id, fecha, titulo, contenido, imagen_path FROM articulos ORDER BY id DESC")
     articulos = cursor.fetchall()
     conn.close()
-    
-    # DETECTAR SI SE ESTÁ VISITANDO UN ARTÍCULO ESPECÍFICO POR ENLACE (QUERY PARAM)
-    query_params = st.query_params
-    articulo_seleccionado_id = query_params.get("id", None)
-    
-    if articulo_seleccionado_id:
-        try:
-            articulo_seleccionado_id = int(articulo_seleccionado_id)
-        except:
-            articulo_seleccionado_id = None
 
     if not articulos:
         st.info("Aún no hay artículos publicados. Próximamente se compartirán análisis jurídicos y ponencias.")
     else:
-        # Si hay un ID específico en el link, filtramos para mostrar solo ese artículo
+        # Si la URL trae un ID específico, filtramos para mostrar únicamente ese artículo
         articulos_a_mostrar = articulos
-        if articulo_seleccionado_id:
-            articulos_a_mostrar = [a for a in articulos if a[0] == articulo_seleccionado_id]
+        if articulo_url_id:
+            articulos_a_mostrar = [a for a in articulos if a[0] == articulo_url_id]
             if articulos_a_mostrar:
                 if st.button("⬅️ Ver todos los artículos"):
                     st.query_params.clear()
@@ -340,7 +343,6 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
             
             st.markdown("#### 🔗 Compartir esta publicación:")
             
-            # BOTONES DE COMPARTIR REDES Y ENLACE DIRECTO
             texto_compartir = f"Leé este artículo del Dr. Cristian Leites: '{titulo}'. Ingresá acá: {url_articulo}"
             
             wapp_link = f"https://wa.me/?text={texto_compartir.replace(' ', '%20')}"
@@ -373,7 +375,6 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
                 </div>
             ''', unsafe_allow_html=True)
             
-            # Caja con el link directo para copiar fácil
             st.text_input(f"Enlace directo para historia de Instagram o copiar (Artículo #{art_id}):", value=url_articulo, key=f"link_input_{art_id}")
             
             st.divider()
@@ -429,7 +430,6 @@ else:
                 </div>
             """, unsafe_allow_html=True)
             
-            # BOTONES DE CONTACTO EN PANTALLA PRINCIPAL
             st.markdown("""
                 <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                     <a href="https://wa.me/5493764876017" target="_blank" style="text-decoration: none;">
