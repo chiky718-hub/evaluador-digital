@@ -123,7 +123,8 @@ def slugify(text):
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     text = re.sub(r'[\s+_-]+', '-', text).strip('-')
-    return text
+    # Acortar el slug para evitar nombres excesivamente largos que rompan la URL
+    return text[:40].strip('-')
 
 def guardar_consulta(rol, tema, detalle, nivel_riesgo):
     conn = sqlite3.connect('consultas_legales_v2.db')
@@ -149,8 +150,6 @@ def guardar_articulo(titulo, contenido, imagen_path=""):
     nombre_archivo = f"articulos/{slug}.html"
     
     img_html = f'<img src="../{imagen_path}" style="width:100%; border-radius:8px; margin-bottom:20px;">' if imagen_path else ''
-    
-    # URL oficial de GitHub Pages para este artículo
     url_gh_pages = f"https://chiky718-hub.github.io/evaluador-digital/articulos/{slug}.html"
     
     html_content = f"""<!DOCTYPE html>
@@ -359,9 +358,7 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
             if not slug:
                 slug = slugify(titulo)
             
-            # URL oficial utilizando GitHub Pages
             url_articulo = f"https://chiky718-hub.github.io/evaluador-digital/articulos/{slug}.html"
-            
             st.link_button(f"📖 {titulo} ({fecha})", url_articulo, use_container_width=True)
 
 else:
@@ -777,7 +774,7 @@ else:
                 else:
                     detalle_lab = st.text_area("Describa su situación laboral (diferencias salariales, falta de registración, etc.):")
                     if st.button("Generar Orientación Laboral", type="primary", use_container_width=True):
-                        if not detalle_lab.strict():
+                        if not detalle_lab.strip():
                             st.warning("Por favor, ingrese un detalle de su consulta.")
                         else:
                             guardar_consulta("LABORAL", tipo_laboral, detalle_lab[:50], "EVALUADO_POR_IA")
@@ -795,7 +792,7 @@ else:
                             )
                             
                             mensaje = f"Hola Dr. Leites. Consulté por su web sobre un tema laboral ({tipo_laboral}) y necesito coordinar una entrevista."
-                            enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
+                            enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
                             st.markdown(f'''
                                 <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
@@ -826,7 +823,7 @@ else:
                                     - Descripción: {detalle_consulta}
                                     
                                     REGLAS ESTRICTAS:
-                                    1. Inicia exactamente con: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
+                                    1. Iniciaাদিরقة exactement con: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
                                     2. Redacta solo 3 oraciones indicando los primeros pasos legales o la documentación a reunir.
                                     3. Termina exactamente con: "El Dr. Leites se encuentra a disposición para coordinar una consulta y evaluar la viabilidad de su caso."
                                     """
@@ -854,7 +851,7 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista. Ver en GitHub."
+                                    mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
                                     enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
