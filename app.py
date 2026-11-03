@@ -120,11 +120,14 @@ def init_db():
     conn.close()
 
 def slugify(text):
+    # Reemplazar caracteres especiales y tildes de forma segura
+    import unicodedata
+    text = unicodedata.normalize('NFD', text).encode('ascii', 'ignore').decode('utf-8')
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     text = re.sub(r'[\s+_-]+', '-', text).strip('-')
-    # Acortar el slug para evitar nombres excesivamente largos que rompan la URL
-    return text[:40].strip('-')
+    # Generar un nombre corto y limpio basado en las primeras palabras o ID simulado
+    return text[:25].strip('-')
 
 def guardar_consulta(rol, tema, detalle, nivel_riesgo):
     conn = sqlite3.connect('consultas_legales_v2.db')
@@ -139,7 +142,14 @@ def guardar_articulo(titulo, contenido, imagen_path=""):
     conn = sqlite3.connect('consultas_legales_v2.db')
     c = conn.cursor()
     fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M")
-    slug = slugify(titulo)
+    
+    # Obtener el próximo ID para asegurar nombre único y corto
+    c.execute("SELECT MAX(id) FROM articulos")
+    res = c.fetchone()
+    next_id = (res[0] or 0) + 1
+    
+    slug_base = slugify(titulo)
+    slug = f"art-{next_id}-{slug_base}"
     
     c.execute("INSERT INTO articulos (fecha, titulo, contenido, imagen_path, slug) VALUES (?, ?, ?, ?, ?)", 
               (fecha_actual, titulo, contenido, imagen_path, slug))
@@ -356,7 +366,7 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
         
         for art_id, fecha, titulo, slug in articulos:
             if not slug:
-                slug = slugify(titulo)
+                slug = f"art-{art_id}-{slugify(titulo)}"
             
             url_articulo = f"https://chiky718-hub.github.io/evaluador-digital/articulos/{slug}.html"
             st.link_button(f"📖 {titulo} ({fecha})", url_articulo, use_container_width=True)
@@ -792,7 +802,7 @@ else:
                             )
                             
                             mensaje = f"Hola Dr. Leites. Consulté por su web sobre un tema laboral ({tipo_laboral}) y necesito coordinar una entrevista."
-                            enlace_wa = f"https://wa.me/{numero_whatsapp}?text={mensaje.replace(' ', '%20')}"
+                            enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                             st.markdown(f'''
                                 <a href="{enlace_wa}" target="_blank" style="display: block; background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22" style="vertical-align: middle; margin-right: 8px;"> 
@@ -823,7 +833,7 @@ else:
                                     - Descripción: {detalle_consulta}
                                     
                                     REGLAS ESTRICTAS:
-                                    1. Iniciaাদিরقة exactement con: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
+                                    1. Inicia exactamente con: "SEGUN EL ANÁLISIS DEL DR. CRISTIAN LEITES:"
                                     2. Redacta solo 3 oraciones indicando los primeros pasos legales o la documentación a reunir.
                                     3. Termina exactamente con: "El Dr. Leites se encuentra a disposición para coordinar una consulta y evaluar la viabilidad de su caso."
                                     """
