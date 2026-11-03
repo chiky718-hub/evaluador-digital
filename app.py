@@ -150,6 +150,9 @@ def guardar_articulo(titulo, contenido, imagen_path=""):
     
     img_html = f'<img src="../{imagen_path}" style="width:100%; border-radius:8px; margin-bottom:20px;">' if imagen_path else ''
     
+    # URL oficial de GitHub Pages para este artículo
+    url_gh_pages = f"https://chiky718-hub.github.io/evaluador-digital/articulos/{slug}.html"
+    
     html_content = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -158,7 +161,7 @@ def guardar_articulo(titulo, contenido, imagen_path=""):
     <title>{titulo} | Estudio Leites</title>
     <meta property="og:title" content="{titulo}">
     <meta property="og:description" content="Artículo de doctrina y práctica legal del Dr. Cristian Dario Leites.">
-    <meta property="og:url" content="https://www.estudioleites.com.ar/articulos/{slug}.html">
+    <meta property="og:url" content="{url_gh_pages}">
     <style>
         body {{ font-family: 'Lora', Georgia, serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; line-height: 1.8; }}
         .container {{ max-width: 800px; margin: 40px auto; background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }}
@@ -356,10 +359,9 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
             if not slug:
                 slug = slugify(titulo)
             
-            # URL absoluta directa al archivo HTML estático creado en GitHub/Streamlit
-            url_articulo = f"https://www.estudioleites.com.ar/articulos/{slug}.html"
+            # URL oficial utilizando GitHub Pages
+            url_articulo = f"https://chiky718-hub.github.io/evaluador-digital/articulos/{slug}.html"
             
-            # Usando st.link_button para garantizar apertura nativa en pestaña nueva sin interferencias
             st.link_button(f"📖 {titulo} ({fecha})", url_articulo, use_container_width=True)
 
 else:
@@ -775,7 +777,7 @@ else:
                 else:
                     detalle_lab = st.text_area("Describa su situación laboral (diferencias salariales, falta de registración, etc.):")
                     if st.button("Generar Orientación Laboral", type="primary", use_container_width=True):
-                        if not detalle_lab.strip():
+                        if not detalle_lab.strict():
                             st.warning("Por favor, ingrese un detalle de su consulta.")
                         else:
                             guardar_consulta("LABORAL", tipo_laboral, detalle_lab[:50], "EVALUADO_POR_IA")
@@ -852,7 +854,7 @@ else:
                                     
                                     st.divider()
                                     st.markdown("### 📲 Contacto Directo con el Estudio")
-                                    mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista."
+                                    mensaje = f"Hola Dr. Leites. Consulté por su sitio web sobre un tema de {rama_derecho} y necesito coordinar una entrevista. Ver en GitHub."
                                     enlace_wa = f"https://wa.me/5493764876017?text={mensaje.replace(' ', '%20')}"
                                     
                                     st.markdown(f'''
