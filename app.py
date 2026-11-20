@@ -127,7 +127,7 @@ if fondo_path:
 
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
 
 /* Fondo principal y tipografía base */
 .stApp {{
@@ -136,16 +136,17 @@ st.markdown(f"""
     color: #F5F5F3;
 }}
 
+/* Espaciado superior ampliado para evitar corte con la barra superior de Streamlit */
 .block-container {{
     max-width: 880px;
-    padding-top: 2.2rem;
+    padding-top: 4rem !important;
     padding-bottom: 3rem;
 }}
 
 /* Jerarquía tipográfica institucional */
 h1, h2, h3, .cinzel-title {{
-    font-family: 'Cinzel', serif !important;
-    color: #F5F5F3 !important;
+    font-family: 'Cinzel', Georgia, serif !important;
+    color: #E6E9EF !important;
     letter-spacing: 0.03em;
 }}
 
@@ -209,18 +210,28 @@ div.stButton > button[kind="primary"]:hover {{
     margin-bottom: 0.5rem;
 }}
 
+/* Título principal idéntico en tipografía serif clásica y tono al logo del sidebar */
+div[data-testid="stMarkdownContainer"] .titulo-estudio,
 .titulo-estudio {{
-    font-family: 'Cinzel', serif;
-    font-size: 2.65rem;
-    font-weight: 600;
-    color: #F5F5F3;
-    margin-bottom: 0.25rem;
-    line-height: 1.18;
-    letter-spacing: 0.04em;
+    font-family: 'Cinzel', Georgia, serif !important;
+    font-size: 2.85rem !important;
+    font-weight: 500 !important;
+    color: #E6E9EF !important;
+    margin-top: 0.2rem !important;
+    margin-bottom: 0.45rem !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.04em !important;
+}}
+
+.titulo-estudio .cap-inicial {{
+    font-family: 'Cinzel', Georgia, serif !important;
+    font-size: 1.13em !important;
+    font-weight: 500 !important;
+    color: #E6E9EF !important;
 }}
 
 .subtitulo-hero {{
-    font-family: 'Cinzel', serif;
+    font-family: 'Cinzel', Georgia, serif !important;
     font-size: 1.12rem;
     font-weight: 500;
     color: #C5CBD3;
@@ -243,7 +254,7 @@ div.stButton > button[kind="primary"]:hover {{
 }}
 
 .seccion-titulo {{
-    font-family: 'Cinzel', serif;
+    font-family: 'Cinzel', Georgia, serif !important;
     font-size: 1.45rem;
     font-weight: 600;
     color: #F5F5F3;
@@ -266,7 +277,7 @@ div.stButton > button[kind="primary"]:hover {{
 }}
 
 .card-piedra h4 {{
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Cinzel', Georgia, serif !important;
     color: #162235 !important;
     font-size: 1.05rem;
     font-weight: 700;
@@ -291,7 +302,7 @@ div.stButton > button[kind="primary"]:hover {{
 }}
 
 .card-marino h4 {{
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Cinzel', Georgia, serif !important;
     color: #F5F5F3 !important;
     font-size: 0.98rem;
     margin-top: 0;
@@ -306,7 +317,7 @@ div.stButton > button[kind="primary"]:hover {{
 }}
 
 .paso-numero {{
-    font-family: 'Cinzel', serif;
+    font-family: 'Cinzel', Georgia, serif !important;
     font-size: 1.5rem;
     font-weight: 700;
     color: #C5CBD3;
@@ -466,7 +477,6 @@ if 'vista_actual' not in st.session_state:
 
 # 5. BARRA LATERAL (SIDEBAR INSTITUCIONAL)
 with st.sidebar:
-    # Prioriza el nuevo avatar circular azul marino si está en la carpeta; si no, mantiene compatibilidad con logo.png
     avatar_nuevo = None
     for ext in ['avatar_cdl.png', 'avatar_cdl.jpg', 'avatar_cdl.jpeg', 'avatar.png', 'avatar.jpg']:
         if os.path.exists(ext):
@@ -512,7 +522,7 @@ with st.sidebar:
     st.markdown(
         """
         <div style="text-align: center;">
-            <div style="font-family: 'Cinzel', serif; font-weight: 600; font-size: 1.05em; color: #F5F5F3; letter-spacing: 0.03em;">
+            <div style="font-family: 'Cinzel', serif; font-weight: 600; font-size: 1.05em; color: #E6E9EF; letter-spacing: 0.03em;">
                 LEITES & ASOCIADOS
             </div>
             <div style="font-size: 0.78em; color: #C5CBD3; letter-spacing: 0.12em; margin-bottom: 8px;">
@@ -574,7 +584,7 @@ with st.sidebar:
 if st.session_state.get('acceso_concedido', False):
     st.markdown("""
         <div class="etiqueta-superior">ADMINISTRACIÓN INTERNA</div>
-        <div class="titulo-estudio" style="font-size: 2.2rem;">⚙️ Panel de Gestión del Estudio</div>
+        <div class="titulo-estudio" style="font-size: 2.2rem !important;">⚙️ Panel de Gestión del Estudio</div>
     """, unsafe_allow_html=True)
     
     tab_panel1, tab_panel2 = st.tabs(["📊 Consultas Registradas", "✍️ Redactar y Publicar Artículo"])
@@ -633,7 +643,7 @@ if st.session_state.get('acceso_concedido', False):
 elif st.session_state['vista_actual'] == 'ARTICULOS':
     st.markdown("""
         <div class="etiqueta-superior">DOCTRINA • JURISPRUDENCIA • PRÁCTICA FORENSE</div>
-        <div class="titulo-estudio">Biblioteca Jurídica</div>
+        <div class="titulo-estudio"><span class="cap-inicial">B</span>IBLIOTECA <span class="cap-inicial">J</span>URÍDICA</div>
         <div class="bajada-hero">Artículos, ensayos y publicaciones de doctrina y litigación penal del Dr. Cristian Darío Leites.</div>
     """, unsafe_allow_html=True)
     
@@ -661,10 +671,11 @@ elif st.session_state['vista_actual'] == 'ARTICULOS':
 else:
     # VISTA PRINCIPAL DE INICIO
     if st.session_state['rol_seleccionado'] is None:
-        # SECCIÓN 1: HERO INSTITUCIONAL Y SEO LOCAL
+        # SECCIÓN 1: HERO INSTITUCIONAL LIMPIO (MISMA TIPOGRAFÍA Y COLOR QUE EL LOGO DEL SIDEBAR)
         st.markdown("""
-            <div class="etiqueta-superior">POSADAS • MISIONES • FUERO PROVINCIAL Y FEDERAL</div>
-            <h1 class="titulo-estudio" style="margin-top:0;">LEITES & ASOCIADOS</h1>
+            <div class="titulo-estudio" role="heading" aria-level="1">
+                <span class="cap-inicial">L</span>EITES &amp; <span class="cap-inicial">A</span>SOCIADOS
+            </div>
             <div class="subtitulo-hero">DEFENSA PENAL ESTRATÉGICA Y REPRESENTACIÓN JURÍDICA INTEGRAL</div>
             <div class="bajada-hero">
                 Rigor técnico, confidencialidad absoluta y patrocinio letrado bajo la dirección del <b>Dr. Cristian Darío Leites</b>. 
