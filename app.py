@@ -873,7 +873,7 @@ else:
                     🕒 <b>Horarios:</b> Lunes a viernes de 08:00 a 12:00 hs y de 16:00 a 20:00 hs <i>(Guardia permanente para urgencias penales)</i><br>
                     📞 <b>WhatsApp / Teléfono:</b> <a href="https://wa.me/5493764876017" target="_blank" style="color:#C5CBD3;">+54 376 487-6017</a> &nbsp;|&nbsp; 
                     ✉️ <b>Correo:</b> <a href="mailto:consultas@estudioleites.com.ar" style="color:#C5CBD3;">consultas@estudioleites.com.ar</a><br>
-                    📸 <b>Instagram:</b> <a href="https://www.instagram.com/dr.cristianleites" target="_blank" style="color:#C5CBD3;">@dr.cristianleites</a> &nbsp;|&nbsp;
+                    📸 <b>Instagram:</b> <a href="https://www.instagram.com/dr.cristianleites" target="_blank" style="color:#C5CBD3;">@dr.cristianleites</a> &nbsp;|&nbsp; 
                     🗺️ <a href="https://maps.google.com/maps?cid=396519121907928589" target="_blank" style="color:#C5CBD3;">Ver ubicación en Google Maps</a>
                 </div>
                 <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(197,203,211,0.2); font-size: 0.78rem; color: #9AA2AE;">
@@ -932,7 +932,7 @@ else:
                             """
                             
                             respuesta = client.chat.completions.create(
-                                model="gpt-3.5-turbo",
+                                model="gpt-4o-mini",
                                 messages=[{"role": "system", "content": prompt_sistema}, {"role": "user", "content": prompt_usuario}],
                                 temperature=0.2 
                             )
@@ -1015,7 +1015,7 @@ else:
                             """
                             
                             respuesta = client.chat.completions.create(
-                                model="gpt-3.5-turbo",
+                                model="gpt-4o-mini",
                                 messages=[{"role": "system", "content": prompt_sistema}, {"role": "user", "content": prompt_usuario}],
                                 temperature=0.2 
                             )
@@ -1118,7 +1118,7 @@ else:
                                     """
                                     
                                     respuesta = client.chat.completions.create(
-                                        model="gpt-3.5-turbo",
+                                        model="gpt-4o-mini",
                                         messages=[{"role": "system", "content": prompt_sistema}, {"role": "user", "content": prompt_usuario}],
                                         temperature=0.2
                                     )
@@ -1187,7 +1187,7 @@ else:
                                     """
                                     
                                     respuesta = client.chat.completions.create(
-                                        model="gpt-3.5-turbo",
+                                        model="gpt-4o-mini",
                                         messages=[{"role": "system", "content": prompt_sistema}, {"role": "user", "content": prompt_usuario}],
                                         temperature=0.2
                                     )
@@ -1280,7 +1280,7 @@ else:
                                     """
                                     
                                     respuesta = client.chat.completions.create(
-                                        model="gpt-3.5-turbo",
+                                        model="gpt-4o-mini",
                                         messages=[{"role": "system", "content": prompt_sistema}, {"role": "user", "content": prompt_usuario}],
                                         temperature=0.2 
                                     )
